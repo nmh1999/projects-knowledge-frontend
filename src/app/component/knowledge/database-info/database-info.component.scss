@@ -1,42 +1,124 @@
+:host {
+  display: block;
+  min-width: 0;
+}
 .detail-card {
-  height: 100%;
   padding: 20px;
+  color: var(--ink);
+  container-type: inline-size;
 }
 h3 {
   font-size: 15px;
-  margin: 0 0 14px;
+  margin: 0 0 16px;
 }
 h3 span {
-  font-size: 9px;
-  background: #eaf0f5;
-  padding: 4px 7px;
-  border-radius: 9px;
-  margin-inline-start: 4px;
+  font-size: 11px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 8px;
+  margin-inline-start: 6px;
 }
 article {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  overflow-wrap: anywhere;
+}
+article + article {
+  margin-top: 12px;
+}
+header {
   display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 10px 0;
-  border-bottom: 1px solid #edf1f4;
+  align-items: flex-start;
+  gap: 12px;
 }
-article:last-child {
-  border: 0;
+header > div {
+  min-width: 0;
 }
-article > span {
-  width: 31px;
-  height: 31px;
+.database-icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  background: #fdecef;
-  color: #b84959;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--blue);
+  font-size: 20px;
 }
 strong {
-  font-size: 11px;
+  font-size: 14px;
+  line-height: 1.6;
 }
 p {
-  font-size: 10px;
-  color: var(--muted);
   margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.table-mapping {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 14px 0 0;
+}
+.table-mapping > div {
+  min-width: 0;
+}
+dt {
+  color: var(--muted);
+  font-size: 10px;
+}
+dd {
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+.schema-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.schema-details section {
+  min-width: 0;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.schema-details section:only-child {
+  grid-column: 1 / -1;
+}
+h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--blue);
+}
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  line-height: 1.8;
+}
+li {
+  position: relative;
+  padding-inline-start: 14px;
+}
+/* The marker follows each entry's direction, including English identifiers in an Arabic UI. */
+li::before {
+  content: '•';
+  position: absolute;
+  inset-inline-start: 0;
+  color: var(--muted);
+}
+li + li {
+  margin-top: 5px;
+}
+@container (max-width: 480px) {
+  .schema-details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
 }

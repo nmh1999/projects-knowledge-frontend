@@ -6,7 +6,8 @@ Standalone Angular 19 UI for exploring local projects. This repository contains 
 
 - English and Arabic, RTL layout, and light/dark themes.
 - Dynamic project selection; no project is selected automatically.
-- Basic summaries, Advanced technical answers, and Workflow diagrams.
+- Basic summaries, Advanced technical answers, Workflow diagrams, and Database schema analysis.
+- Database answers show table purposes, data-access mappings, key columns and relationships from repository evidence, with section/full-answer copy. No live database connection or SQL execution.
 - Diagram zoom, expanded view, and complete PNG/SVG downloads.
 - Source evidence, section-by-section copying, and integration details.
 - The last five unique questions per project, stored in this browser. Selecting one restores a draft and its answer format without sending a request.

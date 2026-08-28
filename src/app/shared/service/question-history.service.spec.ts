@@ -36,6 +36,16 @@ describe('Question history', () => {
     expect(history.forProject('one').length).toBe(5);
   });
 
+  it('persists and restores Database mode alongside existing modes', () => {
+    const history = new QuestionHistoryService();
+    history.remember('one', 'Explain order columns', 'database');
+    history.remember('one', 'Explain approvals', 'workflow');
+    expect(new QuestionHistoryService().forProject('one')).toEqual([
+      {question: 'Explain approvals', mode: 'workflow'},
+      {question: 'Explain order columns', mode: 'database'}
+    ]);
+  });
+
   it('survives reloads and clears only the selected scope', () => {
     const history = new QuestionHistoryService();
     history.remember('one', 'First', 'workflow');

@@ -159,6 +159,9 @@
 .detail-grid .card {
   margin: 0;
 }
+.detail-grid > .card:only-child {
+  grid-column: 1 / -1;
+}
 @media (max-width: 720px) {
   .technical-grid,
   .detail-grid {

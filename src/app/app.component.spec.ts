@@ -52,6 +52,48 @@ describe('AppComponent', () => {
     enoughEvidence: true
   };
 
+  it('sends Database from the picker on Enter and keeps its format in question history', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/projects').flush([snapshot]);
+    fixture.componentInstance.selectProject('sample');
+    http.expectOne('/api/projects/sample').flush(snapshot);
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    host.querySelector<HTMLInputElement>('input[value="database"]')!.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.searchMode()).toBe('database');
+    http.expectNone((request) => request.url.includes('/database/tables'));
+    http.expectNone('/api/questions');
+    const question = host.querySelector<HTMLTextAreaElement>('textarea')!;
+    question.value = '  Explain order tables  ';
+    question.dispatchEvent(new Event('input'));
+    question.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true, cancelable: true}));
+    const request = http.expectOne('/api/questions');
+    expect(request.request.body.mode).toBe('database');
+    expect(request.request.body.question).toBe('Explain order tables');
+    request.flush({
+      ...response,
+      database: [
+        {
+          table: 'orders',
+          entity: 'Order',
+          repository: 'OrderStore',
+          purpose: 'Stores orders.',
+          columns: ['id: bigint, PK'],
+          relationships: []
+        }
+      ]
+    });
+    fixture.detectChanges();
+    expect(host.querySelector('#database-details')?.textContent).toContain('id: bigint, PK');
+    expect(TestBed.inject(QuestionHistoryService).forProject('sample')).toEqual([
+      {question: 'Explain order tables', mode: 'database'}
+    ]);
+    http.verify();
+  });
+
   it('records only submitted questions and restores a draft with its format without another HTTP request', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;

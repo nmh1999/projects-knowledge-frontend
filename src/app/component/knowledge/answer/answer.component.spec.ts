@@ -106,6 +106,69 @@ describe('Basic summary answer', () => {
   });
 });
 
+describe('Database answer', () => {
+  for (const locale of ['en', 'ar'] as const) {
+    it(`renders and copies a focused Database answer in ${locale}`, async () => {
+      await TestBed.configureTestingModule({imports: [AnswerComponent]}).compileComponents();
+      const fixture = TestBed.createComponent(AnswerComponent);
+      const language = TestBed.inject(LanguageService);
+      language.current.set(locale);
+      const answer: DtoKnowledgeAnswer = {
+        inScope: true,
+        project: 'Project',
+        question: 'Explain order tables',
+        summary: 'Orders link to customers.',
+        confidence: 'high',
+        enoughEvidence: true,
+        businessFlow: [],
+        technicalFlow: [],
+        apis: [],
+        database: [
+          {
+            table: 'orders',
+            entity: 'Order',
+            repository: 'OrderStore',
+            purpose: 'Stores orders.',
+            columns: ['id: bigint, primary key'],
+            relationships: ['DDL: orders.customer_id → customers.id']
+          }
+        ],
+        integrations: [],
+        scheduledJobs: [],
+        technicalDetails: [],
+        sources: [],
+        roles: [],
+        keyFindings: ['OrderStore saves orders.'],
+        risks: ['Live state not checked.'],
+        followUpQuestions: []
+      };
+      fixture.componentRef.setInput('answer', answer);
+      fixture.detectChanges();
+      const host = fixture.nativeElement as HTMLElement;
+      expect(host.querySelector('#database-details')?.textContent).toContain('Stores orders.');
+      expect(host.querySelector('.table-columns')?.textContent).toContain('id: bigint, primary key');
+      expect(host.querySelector('.table-relationships')?.textContent).toContain(
+        'DDL: orders.customer_id → customers.id'
+      );
+      expect(host.querySelector('.answer-nav a[href="#database-details"]')?.textContent).toBe(language.t('database'));
+      expect(host.querySelector('#api-details')).toBeNull();
+      expect(host.querySelector('#flow')).toBeNull();
+      expect(host.querySelector('app-workflow-diagram')).toBeNull();
+      const grid = host.querySelector<HTMLElement>('#details')!;
+      const card = host.querySelector<HTMLElement>('#database-details')!;
+      expect(card.getBoundingClientRect().width).toBeCloseTo(grid.getBoundingClientRect().width, 0);
+      const copy = spyOn(navigator.clipboard, 'writeText').and.resolveTo();
+      host.querySelector<HTMLButtonElement>('#database-details .section-copy')!.click();
+      expect(copy).toHaveBeenCalledWith(jasmine.stringContaining('id: bigint, primary key'));
+      expect(copy).toHaveBeenCalledWith(jasmine.stringContaining(language.t('databaseRelationships')));
+      await fixture.componentInstance.copyFullAnswer(answer);
+      expect(copy).toHaveBeenCalledWith(jasmine.stringContaining('DDL: orders.customer_id → customers.id'));
+      expect(copy).toHaveBeenCalledWith(jasmine.stringContaining('OrderStore'));
+      expect(copy.calls.mostRecent().args[0]).not.toContain('undefined');
+    });
+  }
+});
+
 describe('Workflow answer', () => {
   for (const language of ['en', 'ar'] as const) {
     it(`renders roles, steps and a labelled example in ${language}, including section and full copy`, async () => {

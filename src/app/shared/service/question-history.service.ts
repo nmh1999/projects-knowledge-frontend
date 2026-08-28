@@ -1,10 +1,10 @@
 import {Injectable, signal} from '@angular/core';
-import {SearchMode} from '@shared/enums/knowledge/SearchMode';
+import {SEARCH_MODES, SearchMode} from '@shared/enums/knowledge/SearchMode';
 
 import {QuestionHistoryEntry} from '@shared/schema/general/QuestionHistoryEntry';
 const STORAGE_KEY = 'projects-knowledge-question-history-v1';
 const HISTORY_LIMIT = 5;
-const validMode = (mode: unknown): mode is SearchMode => mode === 'basic' || mode === 'advanced' || mode === 'workflow';
+const validMode = (mode: unknown): mode is SearchMode => SEARCH_MODES.some((value) => value === mode);
 
 /** Local question text only: separate each project/scope and never store answers or call the API. */
 @Injectable({providedIn: 'root'})

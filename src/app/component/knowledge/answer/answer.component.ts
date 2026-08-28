@@ -71,7 +71,19 @@ export class AnswerComponent {
     );
   }
   databaseLines(result: DtoKnowledgeAnswer): string[] {
-    return result.database.map((item) => `${item.table || item.entity} — ${item.purpose} [${item.repository}]`);
+    return result.database.map((item) =>
+      [
+        `${item.table || item.entity || this.language.t('databaseUnknownTable')} — ${item.purpose}`,
+        ...(item.entity ? [`${this.language.t('entity')}: ${item.entity}`] : []),
+        ...(item.repository ? [`${this.language.t('databaseAccess')}: ${item.repository}`] : []),
+        ...(item.columns?.length
+          ? [`${this.language.t('databaseColumns')}:`, ...item.columns.map((value) => `  • ${value}`)]
+          : []),
+        ...(item.relationships?.length
+          ? [`${this.language.t('databaseRelationships')}:`, ...item.relationships.map((value) => `  • ${value}`)]
+          : [])
+      ].join('\n')
+    );
   }
   integrationLines(result: DtoKnowledgeAnswer): string[] {
     return result.integrations.map((item) => `${item.name} — ${item.purpose} [${item.usedBy}]`);

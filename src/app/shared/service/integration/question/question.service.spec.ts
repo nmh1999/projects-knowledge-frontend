@@ -7,7 +7,7 @@ describe('QuestionService search modes', () => {
   beforeEach(() => TestBed.configureTestingModule({providers: [provideHttpClient(), provideHttpClientTesting()]}));
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
-  for (const mode of ['basic', 'advanced', 'workflow'] as const) {
+  for (const mode of ['basic', 'advanced', 'workflow', 'database'] as const) {
     it(`sends ${mode} to the backend`, () => {
       TestBed.inject(QuestionService).ask('project', 'Which framework?', 'ar', mode).subscribe();
       const request = TestBed.inject(HttpTestingController).expectOne('/api/questions');

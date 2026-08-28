@@ -2,13 +2,59 @@
   <h3>
     {{ language.t('database') }} <span>{{ items().length }}</span>
   </h3>
-  @for (item of items(); track item.table) {
+  @for (item of items(); track $index) {
     <article>
-      <span>▱</span>
-      <div>
-        <strong>{{ item.table }}</strong>
-        @if (item.entity) {
-          <p>{{ language.t('entity') }} · {{ item.entity }}</p>
+      <header>
+        <span class="database-icon" aria-hidden="true">▱</span>
+        <div>
+          <strong
+            ><bdi dir="auto">{{ item.table || item.entity || language.t('databaseUnknownTable') }}</bdi></strong
+          >
+          @if (item.purpose) {
+            <p class="table-purpose" dir="auto">{{ item.purpose }}</p>
+          }
+        </div>
+      </header>
+      @if (item.entity || item.repository) {
+        <dl class="table-mapping">
+          @if (item.entity) {
+            <div>
+              <dt>{{ language.t('entity') }}</dt>
+              <dd>
+                <bdi dir="auto">{{ item.entity }}</bdi>
+              </dd>
+            </div>
+          }
+          @if (item.repository) {
+            <div>
+              <dt>{{ language.t('databaseAccess') }}</dt>
+              <dd>
+                <bdi dir="auto">{{ item.repository }}</bdi>
+              </dd>
+            </div>
+          }
+        </dl>
+      }
+      <div class="schema-details">
+        @if (item.columns?.length) {
+          <section class="table-columns">
+            <h4>{{ language.t('databaseColumns') }}</h4>
+            <ul>
+              @for (column of item.columns; track $index) {
+                <li dir="auto">{{ column }}</li>
+              }
+            </ul>
+          </section>
+        }
+        @if (item.relationships?.length) {
+          <section class="table-relationships">
+            <h4>{{ language.t('databaseRelationships') }}</h4>
+            <ul>
+              @for (relationship of item.relationships; track $index) {
+                <li dir="auto">{{ relationship }}</li>
+              }
+            </ul>
+          </section>
         }
       </div>
     </article>

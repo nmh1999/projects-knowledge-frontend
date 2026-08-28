@@ -115,6 +115,8 @@ describe('Question search modes', () => {
     fixture.nativeElement.querySelector('input[value="advanced"]').click();
     fixture.nativeElement.querySelector('input[value="workflow"]').click();
     expect(changed).not.toHaveBeenCalled();
+    fixture.nativeElement.querySelector('input[value="database"]').click();
+    expect(changed).not.toHaveBeenCalled();
   });
 
   it('selects Workflow without submitting and displays its own hint', () => {
@@ -132,6 +134,26 @@ describe('Question search modes', () => {
       fixture.componentInstance.language.t('workflowHint')
     );
     expect(fixture.componentInstance.question.value).toBe('Explain approvals');
+  });
+
+  it('selects and restores Database mode without sending until Enter', () => {
+    const component = fixture.componentInstance;
+    const changed = spyOn(component.modeChanged, 'emit');
+    const asked = spyOn(component.asked, 'emit');
+    component.question.setValue('Explain order tables');
+    fixture.nativeElement.querySelector('input[value="database"]').click();
+    expect(changed).toHaveBeenCalledOnceWith('database');
+    expect(component.question.value).toBe('Explain order tables');
+    expect(asked).not.toHaveBeenCalled();
+    fixture.componentRef.setInput('mode', 'database');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.mode-hint').textContent).toBe(component.language.t('databaseHint'));
+    component.restore({question: '  Explain keys  ', mode: 'database'});
+    expect(asked).not.toHaveBeenCalled();
+    fixture.nativeElement
+      .querySelector('textarea')
+      .dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true, cancelable: true}));
+    expect(asked).toHaveBeenCalledOnceWith('Explain keys');
   });
 
   it('sends trimmed text on Enter, but not Shift+Enter', () => {
@@ -156,7 +178,7 @@ describe('Question search modes', () => {
         language === 'ar' ? 'اسأل عن Example API' : 'Ask anything about Example API'
       );
       expect(host.querySelector('.ask-context')).toBeNull();
-      for (const mode of ['basic', 'advanced', 'workflow']) {
+      for (const mode of ['basic', 'advanced', 'workflow', 'database']) {
         expect(host.textContent).toContain(fixture.componentInstance.language.t(mode + 'Mode'));
       }
       expect(host.querySelectorAll('.mode-hint').length).toBe(1);
@@ -196,9 +218,12 @@ describe('Question search modes', () => {
         const card = host.querySelector<HTMLElement>('.ask-card')!;
         const choices = Array.from(host.querySelectorAll<HTMLElement>('.search-modes label'));
         expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth + 1);
-        expect(
-          choices.every((choice) => choice.getBoundingClientRect().top === choices[0].getBoundingClientRect().top)
-        ).toBeTrue();
+        expect(choices.length).toBe(4);
+        if (width === 960)
+          expect(
+            choices.every((choice) => choice.getBoundingClientRect().top === choices[0].getBoundingClientRect().top)
+          ).toBeTrue();
+        else expect(new Set(choices.map((choice) => choice.getBoundingClientRect().top)).size).toBe(2);
         expect(host.querySelector('form')!.contains(host.querySelector('fieldset'))).toBeTrue();
         expect(host.querySelector('.ask-button b')).toBeNull();
         const picker = host.querySelector<HTMLElement>('.mode-picker')!;

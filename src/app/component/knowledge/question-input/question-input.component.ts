@@ -1,7 +1,7 @@
 import {Component, effect, ElementRef, inject, input, output, ViewChild} from '@angular/core';
 import {FormControl, ReactiveFormsModule, Validators} from '@angular/forms';
 import {LanguageService} from '@shared/service/language.service';
-import {SearchMode} from '@shared/enums/knowledge/SearchMode';
+import {SEARCH_MODES, SearchMode} from '@shared/enums/knowledge/SearchMode';
 import {QuestionHistoryEntry} from '@shared/schema/general/QuestionHistoryEntry';
 
 @Component({
@@ -13,7 +13,7 @@ import {QuestionHistoryEntry} from '@shared/schema/general/QuestionHistoryEntry'
 })
 export class QuestionInputComponent {
   readonly language = inject(LanguageService);
-  readonly modes: SearchMode[] = ['basic', 'advanced', 'workflow'];
+  readonly modes = SEARCH_MODES;
   readonly mode = input<SearchMode>('basic');
   readonly modeChanged = output<SearchMode>();
   readonly history = input<readonly QuestionHistoryEntry[]>([]);
