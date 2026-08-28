@@ -22,4 +22,8 @@ export class QuestionService {
     const request: ReqQuestion = {projectId, question, language, mode};
     return this.httpClient.post<DtoKnowledgeAnswer>(this.controllerUrl, request);
   }
+
+  public refresh(request: ReqQuestion): Observable<DtoKnowledgeAnswer> {
+    return this.httpClient.post<DtoKnowledgeAnswer>(this.controllerUrl + '/refresh', request);
+  }
 }

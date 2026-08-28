@@ -9,6 +9,8 @@ import {QuestionService} from '@shared/service/integration/question/question.ser
 import {IntegrationService} from '@shared/service/integration/integration/integration.service';
 import {DtoProject} from '@shared/schema/response/project/DtoProject';
 import {DtoKnowledgeAnswer} from '@shared/schema/response/knowledge/DtoKnowledgeAnswer';
+import {ReqQuestion} from '@shared/schema/request/knowledge/ReqQuestion';
+import {ReqIntegrationDetails} from '@shared/schema/request/knowledge/ReqIntegrationDetails';
 import {SearchMode} from '@shared/enums/knowledge/SearchMode';
 import {LanguageService} from '@shared/service/language.service';
 import {QuestionHistoryService} from '@shared/service/question-history.service';
@@ -43,6 +45,15 @@ export class AppComponent implements OnInit {
   readonly selectedProject = signal<DtoProject | null>(null);
   readonly answer = signal<DtoKnowledgeAnswer | null>(null);
   readonly loading = signal(false);
+  readonly answerRefreshing = signal(false);
+  readonly answerRefreshError = signal('');
+  readonly answerBusy = computed(() => this.loading() || this.answerRefreshing());
+  private answerRequest:
+    | {kind: 'question'; body: ReqQuestion}
+    | {kind: 'integration'; body: ReqIntegrationDetails}
+    | null = null;
+  readonly answerUpdatedAt = computed(() => this.formatAnswerDate(this.answer()?.updatedAt));
+  readonly answerExpiresAt = computed(() => this.formatAnswerDate(this.answer()?.expiresAt));
   readonly error = signal('');
   readonly menuOpen = signal(false);
   readonly searchMode = signal<SearchMode>('basic');
@@ -66,7 +77,7 @@ export class AppComponent implements OnInit {
   }
   loadProjects(refresh = false): void {
     if (this.projectsLoading()) return;
-    if (refresh && (this.loading() || this.overviewLoading() || this.overviewRefreshing())) return;
+    if (refresh && (this.answerBusy() || this.overviewLoading() || this.overviewRefreshing())) return;
     this.projectsLoading.set(true);
     this.projectsRefreshError.set('');
     if (!refresh) this.error.set('');
@@ -90,6 +101,7 @@ export class AppComponent implements OnInit {
     });
   }
   private clearSelection(): void {
+    this.resetAnswerRefresh();
     this.loading.set(false);
     this.selectionVersion++;
     this.overviewLoading.set(false);
@@ -103,6 +115,7 @@ export class AppComponent implements OnInit {
     this.lastIntegration.set('');
   }
   selectProject(projectId: string): void {
+    this.resetAnswerRefresh();
     const version = ++this.selectionVersion;
     this.loading.set(false);
     this.selectedId.set(projectId);
@@ -138,7 +151,7 @@ export class AppComponent implements OnInit {
       !this.selectedProject() ||
       this.overviewLoading() ||
       this.overviewRefreshing() ||
-      this.loading()
+      this.answerBusy()
     )
       return;
     const version = this.selectionVersion;
@@ -162,44 +175,88 @@ export class AppComponent implements OnInit {
   }
   ask(question: string, mode: SearchMode = this.searchMode()): void {
     question = question.trim();
-    if (!this.selectedId() || this.loading() || !question) return;
+    if (!this.selectedId() || this.answerBusy() || !question) return;
     this.questionHistory.remember(this.selectedId(), question, mode);
     this.lastSearchMode.set(mode);
     this.lastIntegration.set('');
     this.lastQuestion.set(question);
+    this.answerRequest = {
+      kind: 'question',
+      body: {projectId: this.selectedId(), question, language: this.language.current(), mode}
+    };
     this.requestAnswer(this.questionService.ask(this.selectedId(), question, this.language.current(), mode));
   }
   clearQuestionHistory(): void {
-    if (!this.loading()) this.questionHistory.clear(this.selectedId());
+    if (!this.answerBusy()) this.questionHistory.clear(this.selectedId());
+  }
+  removeQuestionHistory(question: string): void {
+    if (!this.answerBusy()) this.questionHistory.remove(this.selectedId(), question);
   }
   openIntegration(name: string): void {
-    if (!this.selectedId() || this.loading()) return;
+    if (!this.selectedId() || this.answerBusy()) return;
     this.lastQuestion.set('');
     this.lastIntegration.set(name);
+    this.answerRequest = {
+      kind: 'integration',
+      body: {projectId: this.selectedId(), name, language: this.language.current()}
+    };
     this.requestAnswer(this.integrationService.getIntegrationDetails(this.selectedId(), name, this.language.current()));
   }
   /** Return to the retained snapshot without another HTTP or model request. */
   showOverview(): void {
-    if (this.loading()) return;
+    if (this.answerBusy()) return;
+    this.resetAnswerRefresh();
     this.answer.set(null);
     this.error.set('');
     this.lastQuestion.set('');
     this.lastIntegration.set('');
     this.scrollToResults();
   }
+  /** Refresh the displayed answer's original context, never the current editable draft or picker. */
+  refreshAnswer(): void {
+    const original = this.answerRequest;
+    if (!this.answer() || this.answerBusy() || !original || original.body.projectId !== this.selectedId()) return;
+    const request =
+      original.kind === 'question'
+        ? this.questionService.refresh(original.body)
+        : this.integrationService.refresh(original.body);
+    this.requestAnswer(request, true);
+  }
+  private resetAnswerRefresh(): void {
+    this.answerRequest = null;
+    this.answerRefreshing.set(false);
+    this.answerRefreshError.set('');
+  }
+  private formatAnswerDate(value: string | null | undefined): {iso: string; label: string} | null {
+    if (!value) return null;
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return null;
+    return {
+      iso: date.toISOString(),
+      label: new Intl.DateTimeFormat(this.language.isArabic() ? 'ar-SA' : 'en-GB', {
+        calendar: 'gregory',
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      }).format(date)
+    };
+  }
   // Questions and integration details share the same loading, result and error lifecycle.
-  private requestAnswer(request: Observable<DtoKnowledgeAnswer>): void {
+  private requestAnswer(request: Observable<DtoKnowledgeAnswer>, refresh = false): void {
     const version = this.selectionVersion;
-    this.loading.set(true);
+    const busy = refresh ? this.answerRefreshing : this.loading;
+    busy.set(true);
     this.error.set('');
-    this.answer.set(null);
-    this.scrollToResults();
+    this.answerRefreshError.set('');
+    if (!refresh) {
+      this.answer.set(null);
+      this.scrollToResults();
+    }
     request
       .pipe(
         finalize(() => {
           if (version === this.selectionVersion) {
-            this.loading.set(false);
-            this.scrollToResults();
+            busy.set(false);
+            if (!refresh) this.scrollToResults();
           }
         })
       )
@@ -209,7 +266,9 @@ export class AppComponent implements OnInit {
         },
         error: (response) => {
           if (version === this.selectionVersion)
-            this.error.set(response.error?.message || this.language.t('analysisError'));
+            (refresh ? this.answerRefreshError : this.error).set(
+              response.error?.message || this.language.t('analysisError')
+            );
         }
       });
   }

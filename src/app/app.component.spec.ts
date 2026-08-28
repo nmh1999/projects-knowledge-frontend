@@ -52,6 +52,155 @@ describe('AppComponent', () => {
     enoughEvidence: true
   };
 
+  for (const mode of ['basic', 'advanced', 'workflow', 'database'] as const) {
+    it(`refreshes the original ${mode} answer and preserves it on failure without changing history`, () => {
+      const fixture = TestBed.createComponent(AppComponent);
+      const app = fixture.componentInstance;
+      const http = TestBed.inject(HttpTestingController);
+      fixture.detectChanges();
+      http.expectOne('/api/projects').flush([snapshot]);
+      app.selectProject('sample');
+      http.expectOne('/api/projects/sample').flush(snapshot);
+      app.ask('Original question', mode);
+      const original = {
+        ...response,
+        question: 'Original question',
+        updatedAt: '2026-08-28T10:00:00Z',
+        expiresAt: '2026-08-28T15:00:00Z'
+      };
+      http.expectOne('/api/questions').flush(original);
+      const history = [...app.recentQuestions()];
+      // Changing the picker, draft or UI language must not change the answer being refreshed.
+      app.searchMode.set('advanced');
+      app.language.current.set('ar');
+      fixture.detectChanges();
+      const textarea = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+      textarea.value = 'Another draft';
+      textarea.dispatchEvent(new Event('input'));
+      fixture.nativeElement.querySelector('.refresh-answer').click();
+      fixture.detectChanges();
+      const refresh = http.expectOne('/api/questions/refresh');
+      expect(refresh.request.method).toBe('POST');
+      expect(refresh.request.body).toEqual({projectId: 'sample', question: 'Original question', language: 'en', mode});
+      expect(app.answerRefreshing()).toBeTrue();
+      expect(app.answer()).toBe(original);
+      expect(fixture.nativeElement.querySelector('app-answer')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.refresh-answer').disabled).toBeTrue();
+      expect(fixture.nativeElement.querySelector('.remove-history').disabled).toBeTrue();
+      app.refreshAnswer();
+      app.ask('Duplicate');
+      app.openIntegration('Orbit');
+      app.removeQuestionHistory('Original question');
+      app.clearQuestionHistory();
+      app.loadProjects(true);
+      app.showOverview();
+      http.expectNone(() => true);
+      expect(app.recentQuestions()).toEqual(history);
+      refresh.flush({message: 'Offline'}, {status: 503, statusText: 'Unavailable'});
+      fixture.detectChanges();
+      expect(app.answerRefreshing()).toBeFalse();
+      expect(app.answer()).toBe(original);
+      expect(fixture.nativeElement.querySelector('.answer-refresh-error').textContent).toContain('Offline');
+      expect(fixture.nativeElement.querySelector('.answer-cache-dates time').getAttribute('datetime')).toBe(
+        '2026-08-28T10:00:00.000Z'
+      );
+      fixture.nativeElement.querySelector('.answer-refresh-error button').click();
+      const updated = {
+        ...original,
+        summary: 'Updated summary',
+        updatedAt: '2026-08-28T11:00:00Z',
+        expiresAt: '2026-08-28T16:00:00Z'
+      };
+      http.expectOne('/api/questions/refresh').flush(updated);
+      fixture.detectChanges();
+      expect(app.answer()).toBe(updated);
+      expect(app.answerRefreshError()).toBe('');
+      expect(app.recentQuestions()).toEqual(history);
+      expect(textarea.value).toBe('Another draft');
+      expect(fixture.nativeElement.querySelector('.answer-cache-dates time').getAttribute('datetime')).toBe(
+        '2026-08-28T11:00:00.000Z'
+      );
+      http.verify();
+    });
+  }
+
+  it('deleting a history row leaves the current answer, draft and other project history intact', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/projects').flush([snapshot]);
+    app.selectProject('sample');
+    http.expectOne('/api/projects/sample').flush(snapshot);
+    app.questionHistory.remember('other', 'Original question', 'database');
+    app.ask('Original question');
+    http.expectOne('/api/questions').flush(response);
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.remove-history').click();
+    fixture.detectChanges();
+    expect(app.answer()).toBe(response);
+    expect(app.recentQuestions()).toEqual([]);
+    expect(app.questionHistory.forProject('other').length).toBe(1);
+    http.expectNone(() => true);
+    app.refreshAnswer();
+    http.expectOne('/api/questions/refresh').flush(response);
+    expect(app.recentQuestions()).toEqual([]);
+    http.verify();
+  });
+
+  it('refreshes integration details using the original name and language', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/projects').flush([snapshot]);
+    app.selectProject('sample');
+    http.expectOne('/api/projects/sample').flush(snapshot);
+    app.openIntegration('Orbit');
+    http.expectOne('/api/integrations/details').flush(response);
+    app.language.current.set('ar');
+    app.refreshAnswer();
+    const refresh = http.expectOne('/api/integrations/details/refresh');
+    expect(refresh.request.body).toEqual({projectId: 'sample', name: 'Orbit', language: 'en'});
+    refresh.flush({...response, summary: 'Refreshed integration'});
+    expect(app.answer()?.summary).toBe('Refreshed integration');
+    expect(app.recentQuestions()).toEqual([]);
+    http.verify();
+  });
+
+  for (const fails of [false, true]) {
+    it(`ignores stale answer refresh ${fails ? 'failure' : 'success'} after switching project`, () => {
+      const fixture = TestBed.createComponent(AppComponent);
+      const app = fixture.componentInstance;
+      const http = TestBed.inject(HttpTestingController);
+      fixture.detectChanges();
+      const second = {...snapshot, id: 'second'};
+      http.expectOne('/api/projects').flush([snapshot, second]);
+      app.selectProject('sample');
+      http.expectOne('/api/projects/sample').flush(snapshot);
+      app.ask('First');
+      http.expectOne('/api/questions').flush(response);
+      app.refreshAnswer();
+      const stale = http.expectOne('/api/questions/refresh');
+      app.selectProject('second');
+      http.expectOne('/api/projects/second').flush(second);
+      app.ask('Second');
+      const pending = http.expectOne('/api/questions');
+      if (fails) stale.flush({message: 'Stale failure'}, {status: 503, statusText: 'Unavailable'});
+      else stale.flush(response);
+      expect(app.answer()).toBeNull();
+      expect(app.answerRefreshError()).toBe('');
+      expect(app.answerRefreshing()).toBeFalse();
+      expect(app.loading()).toBeTrue();
+      pending.flush({...response, question: 'Second'});
+      app.refreshAnswer();
+      const next = http.expectOne('/api/questions/refresh');
+      expect(next.request.body.projectId).toBe('second');
+      next.flush(response);
+      http.verify();
+    });
+  }
+
   it('sends Database from the picker on Enter and keeps its format in question history', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const http = TestBed.inject(HttpTestingController);

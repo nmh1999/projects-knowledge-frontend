@@ -6,7 +6,7 @@
     [selectedId]="selectedId()"
     [open]="menuOpen()"
     [refreshing]="projectsLoading()"
-    [refreshDisabled]="loading() || overviewLoading() || overviewRefreshing()"
+    [refreshDisabled]="answerBusy() || overviewLoading() || overviewRefreshing()"
     [refreshError]="projectsRefreshError()"
     (refreshRequested)="loadProjects(true)"
     (selected)="selectProject($event)"
@@ -47,11 +47,12 @@
         <app-question-input
           [projectName]="scopeName()"
           [resetKey]="selectedId()"
-          [loading]="loading()"
+          [loading]="answerBusy()"
           [mode]="searchMode()"
           [history]="recentQuestions()"
           [historyPersistent]="questionHistory.persistent()"
           (historyCleared)="clearQuestionHistory()"
+          (historyRemoved)="removeQuestionHistory($event)"
           (modeChanged)="searchMode.set($event)"
           (asked)="ask($event)"
         />
@@ -71,7 +72,7 @@
         <div id="results-region">
           @if (answer() && !loading()) {
             <div class="result-context">
-              <button class="back-overview" type="button" (click)="showOverview()">
+              <button class="back-overview" type="button" [disabled]="answerBusy()" (click)="showOverview()">
                 <span aria-hidden="true">{{ language.isArabic() ? '→' : '←' }}</span
                 >{{ language.t('backToOverview') }}
               </button>
@@ -80,6 +81,43 @@
                 <p dir="auto">{{ lastIntegration() || answer()?.question || lastQuestion() }}</p>
               </div>
             </div>
+            <div class="answer-cache-bar" [attr.aria-busy]="answerRefreshing()">
+              <div class="answer-cache-dates">
+                @if (answerUpdatedAt(); as updated) {
+                  <span
+                    >{{ language.t('answerUpdatedAt') }}
+                    <time [attr.datetime]="updated.iso">{{ updated.label }}</time></span
+                  >
+                }
+                @if (answerExpiresAt(); as expires) {
+                  <span
+                    >{{ language.t('answerCachedUntil') }}
+                    <time [attr.datetime]="expires.iso">{{ expires.label }}</time></span
+                  >
+                }
+              </div>
+              <button
+                type="button"
+                class="refresh-answer"
+                [disabled]="answerBusy()"
+                [title]="language.t('refreshAnswerHint')"
+                (click)="refreshAnswer()"
+              >
+                <span aria-hidden="true">↻</span
+                >{{ language.t(answerRefreshing() ? 'refreshingAnswer' : 'refreshAnswer') }}
+              </button>
+            </div>
+            @if (answerRefreshing()) {
+              <p class="answer-refresh-status" role="status">{{ language.t('refreshingAnswerHint') }}</p>
+            }
+            @if (answerRefreshError()) {
+              <div class="error-banner answer-refresh-error" role="alert">
+                <p>{{ language.t('answerRefreshFailed') }} {{ answerRefreshError() }}</p>
+                <button type="button" [disabled]="answerBusy()" (click)="refreshAnswer()">
+                  {{ language.t('tryAgain') }}
+                </button>
+              </div>
+            }
             <app-answer [answer]="answer()" />
           }
           @if (!answer() && !loading()) {

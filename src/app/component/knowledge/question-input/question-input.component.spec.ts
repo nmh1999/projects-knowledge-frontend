@@ -70,7 +70,7 @@ describe('Question search modes', () => {
     host.style.width = '320px';
     fixture.componentRef.setInput(
       'history',
-      Array.from({length: 5}, (_, index) => ({
+      Array.from({length: 20}, (_, index) => ({
         question: `${index} <img src=x onerror=alert(1)> ` + 'مرحباLongQuestion'.repeat(30),
         mode: 'workflow'
       }))
@@ -81,7 +81,11 @@ describe('Question search modes', () => {
       fixture.componentInstance.language.current.set(language);
       host.dir = language === 'ar' ? 'rtl' : 'ltr';
       fixture.detectChanges();
-      expect(host.querySelectorAll('.history-question').length).toBe(5);
+      expect(host.querySelectorAll('.history-question').length).toBe(20);
+      expect(host.querySelector('.history-count')?.textContent).toContain('20 / 20');
+      const list = host.querySelector('ol')!;
+      expect(list.clientHeight).toBeLessThanOrEqual(366);
+      expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
       expect(host.querySelector('.question-history summary')?.textContent).toContain(
         fixture.componentInstance.language.t('recentQuestions')
       );
@@ -116,6 +120,26 @@ describe('Question search modes', () => {
     fixture.nativeElement.querySelector('input[value="workflow"]').click();
     expect(changed).not.toHaveBeenCalled();
     fixture.nativeElement.querySelector('input[value="database"]').click();
+    expect(changed).not.toHaveBeenCalled();
+  });
+
+  it('deletes only the chosen entry without restoring or submitting its question', () => {
+    const component = fixture.componentInstance;
+    fixture.componentRef.setInput('history', [
+      {question: 'First', mode: 'basic'},
+      {question: 'Second', mode: 'database'}
+    ]);
+    component.question.setValue('Unsent draft');
+    fixture.detectChanges();
+    const deleted = spyOn(component.historyRemoved, 'emit');
+    const asked = spyOn(component.asked, 'emit');
+    const changed = spyOn(component.modeChanged, 'emit');
+    const button = fixture.nativeElement.querySelectorAll('.remove-history')[1] as HTMLButtonElement;
+    expect(button.getAttribute('aria-label')).toContain('Second');
+    button.click();
+    expect(deleted).toHaveBeenCalledOnceWith('Second');
+    expect(component.question.value).toBe('Unsent draft');
+    expect(asked).not.toHaveBeenCalled();
     expect(changed).not.toHaveBeenCalled();
   });
 

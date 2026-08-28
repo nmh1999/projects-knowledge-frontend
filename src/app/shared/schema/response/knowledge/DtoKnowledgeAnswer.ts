@@ -9,6 +9,8 @@ import {DtoSourceReference} from '@shared/schema/response/source/DtoSourceRefere
 import {DtoWorkflowDiagram} from '@shared/schema/response/knowledge/DtoWorkflowDiagram';
 
 export interface DtoKnowledgeAnswer {
+  updatedAt?: string | null;
+  expiresAt?: string | null;
   inScope: boolean;
   project: string;
   question: string;

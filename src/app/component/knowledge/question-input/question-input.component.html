@@ -57,7 +57,7 @@
   <summary>
     <span class="history-chevron" aria-hidden="true">›</span><span>{{ language.t('recentQuestions') }}</span
     ><span class="history-count"
-      ><bdi dir="ltr">{{ history().length }} / 5</bdi></span
+      ><bdi dir="ltr">{{ history().length }} / {{ historyLimit }}</bdi></span
     >
   </summary>
   <div class="history-body">
@@ -81,6 +81,28 @@
               <span class="history-text" dir="auto">{{ entry.question }}</span
               ><span class="history-mode">{{ language.t(entry.mode + 'Mode') }}</span
               ><span class="history-restore" aria-hidden="true">↶</span>
+            </button>
+            <button
+              type="button"
+              class="remove-history"
+              [disabled]="loading()"
+              [title]="language.t('deleteQuestion')"
+              [attr.aria-label]="language.t('deleteQuestion') + ': ' + entry.question"
+              (click)="historyRemoved.emit(entry.question)"
+            >
+              <svg
+                aria-hidden="true"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" />
+              </svg>
             </button>
           </li>
         }

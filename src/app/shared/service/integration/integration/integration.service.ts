@@ -20,4 +20,8 @@ export class IntegrationService {
     const request: ReqIntegrationDetails = {projectId, name, language};
     return this.httpClient.post<DtoKnowledgeAnswer>(this.controllerUrl + '/details', request);
   }
+
+  public refresh(request: ReqIntegrationDetails): Observable<DtoKnowledgeAnswer> {
+    return this.httpClient.post<DtoKnowledgeAnswer>(this.controllerUrl + '/details/refresh', request);
+  }
 }

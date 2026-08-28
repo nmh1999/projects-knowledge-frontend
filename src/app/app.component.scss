@@ -139,7 +139,8 @@ main {
   font-size: 13px;
   line-height: 1.8;
 }
-.back-overview {
+.back-overview,
+.refresh-answer {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -153,7 +154,8 @@ main {
   font-size: 12px;
   cursor: pointer;
 }
-.back-overview:hover {
+.back-overview:hover:not(:disabled),
+.refresh-answer:hover:not(:disabled) {
   border-color: var(--blue);
   background: var(--surface-soft);
 }
@@ -176,4 +178,39 @@ main {
   color: var(--ink);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+}
+.answer-cache-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-block: 14px;
+}
+.answer-cache-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.answer-cache-dates time {
+  color: var(--ink);
+}
+.refresh-answer {
+  margin-inline-start: auto;
+}
+.back-overview:disabled,
+.refresh-answer:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.refresh-answer:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+.answer-refresh-status {
+  color: var(--muted);
+  font-size: 12px;
 }

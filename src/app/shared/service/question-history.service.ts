@@ -3,7 +3,7 @@ import {SEARCH_MODES, SearchMode} from '@shared/enums/knowledge/SearchMode';
 
 import {QuestionHistoryEntry} from '@shared/schema/general/QuestionHistoryEntry';
 const STORAGE_KEY = 'projects-knowledge-question-history-v1';
-const HISTORY_LIMIT = 5;
+export const QUESTION_HISTORY_LIMIT = 20;
 const validMode = (mode: unknown): mode is SearchMode => SEARCH_MODES.some((value) => value === mode);
 
 /** Local question text only: separate each project/scope and never store answers or call the API. */
@@ -24,7 +24,7 @@ export class QuestionHistoryService {
       projectId,
       [{question: text, mode}, ...this.forProject(projectId).filter((entry) => entry.question !== text)].slice(
         0,
-        HISTORY_LIMIT
+        QUESTION_HISTORY_LIMIT
       )
     );
     this.save(next);
@@ -34,6 +34,17 @@ export class QuestionHistoryService {
     if (!projectId || !this.entries().has(projectId)) return;
     const next = new Map(this.entries());
     next.delete(projectId);
+    this.save(next);
+  }
+
+  /** Deleting history changes only the saved question, not its answer cache or other projects. */
+  remove(projectId: string, question: string): void {
+    const current = this.forProject(projectId);
+    const remaining = current.filter((entry) => entry.question !== question);
+    if (remaining.length === current.length) return;
+    const next = new Map(this.entries());
+    if (remaining.length) next.set(projectId, remaining);
+    else next.delete(projectId);
     this.save(next);
   }
 
@@ -68,7 +79,7 @@ export class QuestionHistoryService {
             continue;
           const question = value.question.trim();
           if (!entries.some((entry) => entry.question === question)) entries.push({question, mode: value.mode});
-          if (entries.length === HISTORY_LIMIT) break;
+          if (entries.length === QUESTION_HISTORY_LIMIT) break;
         }
         if (entries.length) result.set(group[0], entries);
       }

@@ -10,7 +10,8 @@ Standalone Angular 19 UI for exploring local projects. This repository contains 
 - Database answers show table purposes, data-access mappings, key columns and relationships from repository evidence, with section/full-answer copy. No live database connection or SQL execution.
 - Diagram zoom, expanded view, and complete PNG/SVG downloads.
 - Source evidence, section-by-section copying, and integration details.
-- The last five unique questions per project, stored in this browser. Selecting one restores a draft and its answer format without sending a request.
+- The last 20 unique questions per project, stored in this browser. Selecting one restores a draft and its answer format without sending a request. Delete an individual entry or clear this project's history; other projects and cached answers are unaffected.
+- Answers in all four modes are cached on the backend for five hours after completion, separately by scope, language, question and mode. The result shows its last update and expiry time. **Refresh answer** reruns the original request (uses model tokens) and renews the cache; the previous answer stays visible during refresh and on failure. Integration details have the same controls. Backend restarts clear these bounded in-memory caches.
 
 ## Requirements
 

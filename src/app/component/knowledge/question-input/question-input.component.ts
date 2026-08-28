@@ -3,6 +3,7 @@ import {FormControl, ReactiveFormsModule, Validators} from '@angular/forms';
 import {LanguageService} from '@shared/service/language.service';
 import {SEARCH_MODES, SearchMode} from '@shared/enums/knowledge/SearchMode';
 import {QuestionHistoryEntry} from '@shared/schema/general/QuestionHistoryEntry';
+import {QUESTION_HISTORY_LIMIT} from '@shared/service/question-history.service';
 
 @Component({
   selector: 'app-question-input',
@@ -19,6 +20,8 @@ export class QuestionInputComponent {
   readonly history = input<readonly QuestionHistoryEntry[]>([]);
   readonly historyPersistent = input(true);
   readonly historyCleared = output<void>();
+  readonly historyRemoved = output<string>();
+  readonly historyLimit = QUESTION_HISTORY_LIMIT;
   @ViewChild('questionField') private questionField?: ElementRef<HTMLTextAreaElement>;
   readonly projectName = input('this project');
   readonly resetKey = input('');

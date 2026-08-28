@@ -13,27 +13,23 @@ describe('Question history', () => {
     });
   });
 
-  it('keeps only the last five unique, trimmed questions per scope, newest first', () => {
+  it('keeps only the last twenty unique, trimmed questions per scope, newest first', () => {
     const history = new QuestionHistoryService();
-    for (let index = 1; index <= 6; index++) history.remember('one', `  Question ${index}  `, 'basic');
+    for (let index = 1; index <= 21; index++) history.remember('one', `  Question ${index}  `, 'basic');
     history.remember('two', 'Other project', 'advanced');
     history.remember('all', 'Across projects', 'workflow');
-    expect(history.forProject('one').map((entry) => entry.question)).toEqual([
-      'Question 6',
-      'Question 5',
-      'Question 4',
-      'Question 3',
-      'Question 2'
-    ]);
+    expect(history.forProject('one').map((entry) => entry.question)).toEqual(
+      Array.from({length: 20}, (_, index) => `Question ${21 - index}`)
+    );
     history.remember('one', 'Question 3', 'workflow');
     expect(history.forProject('one')[0]).toEqual({question: 'Question 3', mode: 'workflow'});
-    expect(history.forProject('one').length).toBe(5);
+    expect(history.forProject('one').length).toBe(20);
     expect(history.forProject('two')).toEqual([{question: 'Other project', mode: 'advanced'}]);
     expect(history.forProject('all')).toEqual([{question: 'Across projects', mode: 'workflow'}]);
     history.remember('one', '   ', 'basic');
     history.remember('', 'No selection', 'basic');
     expect(history.forProject('')).toEqual([]);
-    expect(history.forProject('one').length).toBe(5);
+    expect(history.forProject('one').length).toBe(20);
   });
 
   it('persists and restores Database mode alongside existing modes', () => {
@@ -75,12 +71,12 @@ describe('Question history', () => {
           {question: 'Ignore', mode: 'unknown'},
           {question: text, mode: 'workflow'},
           {question: text, mode: 'basic'},
-          ...Array.from({length: 10}, (_, index) => ({question: `Question ${index}`, mode: 'advanced'}))
+          ...Array.from({length: 30}, (_, index) => ({question: `Question ${index}`, mode: 'advanced'}))
         ]
       ]
     ]);
     const history = new QuestionHistoryService();
-    expect(history.forProject('one').length).toBe(5);
+    expect(history.forProject('one').length).toBe(20);
     expect(history.forProject('one')[0]).toEqual({question: text, mode: 'workflow'});
     expect(history.forProject('bad')).toEqual([]);
     saved = '{broken';
@@ -100,5 +96,35 @@ describe('Question history', () => {
     expect(history.persistent()).toBeFalse();
     expect(() => history.clear('one')).not.toThrow();
     expect(history.forProject('one')).toEqual([]);
+  });
+
+  it('preserves the existing five entries and grows to twenty after reloading', () => {
+    const old = Array.from({length: 5}, (_, index) => ({question: `Old ${index}`, mode: 'basic'}));
+    saved = JSON.stringify([['one', old]]);
+    const history = new QuestionHistoryService();
+    expect(history.forProject('one')).toEqual(old as ReturnType<typeof history.forProject>);
+    for (let i = 0; i < 15; i++) history.remember('one', `New ${i}`, 'database');
+    const restored = new QuestionHistoryService().forProject('one');
+    expect(restored.length).toBe(20);
+    expect(restored[19].question).toBe('Old 4');
+  });
+
+  it('deletes one saved question without changing other scopes or remaining order', () => {
+    const history = new QuestionHistoryService();
+    for (const question of ['First', 'Second', 'Third']) history.remember('one', question, 'basic');
+    history.remember('two', 'Second', 'database');
+    history.remove('one', 'Second');
+    expect(new QuestionHistoryService().forProject('one').map((entry) => entry.question)).toEqual(['Third', 'First']);
+    expect(new QuestionHistoryService().forProject('two')[0].question).toBe('Second');
+    const before = saved;
+    history.remove('one', 'Missing');
+    history.remove('', 'First');
+    expect(saved).toBe(before);
+    history.remove('one', 'Third');
+    history.remove('one', 'First');
+    expect(new QuestionHistoryService().forProject('one')).toEqual([]);
+    expect(new QuestionHistoryService().forProject('two').length).toBe(1);
+    history.remove('two', 'Second');
+    expect(saved).toBeNull();
   });
 });
