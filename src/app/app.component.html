@@ -77,14 +77,20 @@
         <div id="results-region">
           @if (answerCancelled()) {
             <div class="cancelled-state" role="status">
-              <p>{{ language.t('requestCancelled') }}</p>
-              <button
-                type="button"
-                (click)="lastIntegration() ? openIntegration(lastIntegration()) : ask(lastQuestion(), lastSearchMode())"
-              >
-                {{ language.t('tryAgain') }}
-              </button>
-              <button type="button" (click)="showOverview()">{{ language.t('backToOverview') }}</button>
+              <p><span class="cancelled-icon" aria-hidden="true"></span>{{ language.t('requestCancelled') }}</p>
+              <div class="cancelled-actions">
+                <button
+                  type="button"
+                  (click)="
+                    lastIntegration() ? openIntegration(lastIntegration()) : ask(lastQuestion(), lastSearchMode())
+                  "
+                >
+                  {{ language.t('tryAgain') }}
+                </button>
+                <button class="cancelled-back" type="button" (click)="showOverview()">
+                  {{ language.t('backToOverview') }}
+                </button>
+              </div>
             </div>
           }
           @if (answer() && !loading()) {
@@ -142,8 +148,10 @@
               <p role="status">{{ language.t('loadingOverview') }}</p>
             } @else if (overviewCancelled()) {
               <div class="cancelled-state" role="status">
-                <p>{{ language.t('requestCancelled') }}</p>
-                <button type="button" (click)="selectProject(selectedId())">{{ language.t('tryAgain') }}</button>
+                <p><span class="cancelled-icon" aria-hidden="true"></span>{{ language.t('requestCancelled') }}</p>
+                <div class="cancelled-actions">
+                  <button type="button" (click)="selectProject(selectedId())">{{ language.t('tryAgain') }}</button>
+                </div>
               </div>
             } @else if (overviewError()) {
               <div class="error-banner overview-error" role="alert">

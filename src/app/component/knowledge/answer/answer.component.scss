@@ -1,4 +1,8 @@
 .answer-wrap {
+  // Keep the same spacing around standalone cards and grouped detail sections.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
   margin-top: 22px;
   scroll-behavior: smooth;
 }
@@ -7,7 +11,6 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 11px;
 }
 .answer-nav {
   display: flex;
@@ -55,7 +58,8 @@
   top: 10px;
   width: max-content;
   max-width: 100%;
-  margin: -4px 0 10px auto;
+  margin: 0;
+  margin-inline-start: auto;
   padding: 8px 12px;
   border-radius: 9px;
   background: #e5f7ef;
@@ -69,7 +73,6 @@
   border: 1px solid var(--line);
   border-radius: 15px;
   box-shadow: var(--shadow-sm);
-  margin-bottom: 12px;
   overflow: hidden;
 }
 .summary {
@@ -155,9 +158,6 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-}
-.detail-grid .card {
-  margin: 0;
 }
 .detail-grid > .card:only-child {
   grid-column: 1 / -1;

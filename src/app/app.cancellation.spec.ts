@@ -143,4 +143,43 @@ describe('Cancellation UI', () => {
     tick(5000);
     http.verify();
   }));
+
+  for (const direction of ['ltr', 'rtl']) {
+    for (const width of [390, 1100]) {
+      it(`keeps the cancellation notice separated from history at ${width}px in ${direction}`, fakeAsync(() => {
+        const fixture = TestBed.createComponent(AppComponent);
+        const app = fixture.componentInstance;
+        const http = TestBed.inject(HttpTestingController);
+        fixture.detectChanges();
+        http.expectOne('/api/projects').flush([project]);
+        app.selectProject('sample');
+        http.expectOne('/api/projects/sample').flush(project);
+        app.ask(answer.question, 'database');
+        http.expectOne('/api/questions');
+        TestBed.inject(HttpLoadingService).cancelAll();
+        http.expectOne((request) => request.url.endsWith('/cancel')).flush(null);
+        fixture.detectChanges();
+
+        const content = fixture.nativeElement.querySelector('.content') as HTMLElement;
+        content.style.width = width + 'px';
+        content.dir = direction;
+        const history = content.querySelector<HTMLElement>('.question-history')!;
+        const notice = content.querySelector<HTMLElement>('.cancelled-state')!;
+        expect(notice.getBoundingClientRect().top - history.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(19);
+        expect(notice.scrollWidth).toBeLessThanOrEqual(notice.clientWidth + 1);
+        for (const button of notice.querySelectorAll('button')) {
+          const bounds = button.getBoundingClientRect();
+          expect(bounds.left).toBeGreaterThanOrEqual(notice.getBoundingClientRect().left);
+          expect(bounds.right).toBeLessThanOrEqual(notice.getBoundingClientRect().right);
+        }
+        expect(notice.querySelectorAll('button').length).toBe(2);
+        notice.querySelector<HTMLButtonElement>('.cancelled-back')!.click();
+        fixture.detectChanges();
+        expect(app.answerCancelled()).toBeFalse();
+        expect(content.querySelector('.cancelled-state')).toBeNull();
+        tick(5000);
+        http.verify();
+      }));
+    }
+  }
 });

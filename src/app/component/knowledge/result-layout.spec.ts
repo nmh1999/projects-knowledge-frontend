@@ -3,6 +3,8 @@ import {provideHttpClientTesting} from '@angular/common/http/testing';
 import {TestBed} from '@angular/core/testing';
 import {SourceViewerComponent} from '@component/knowledge/source-viewer/source-viewer.component';
 import {TechnicalFlowComponent} from '@component/knowledge/technical-flow/technical-flow.component';
+import {AnswerComponent} from '@component/knowledge/answer/answer.component';
+import {DtoKnowledgeAnswer} from '@shared/schema/response/knowledge/DtoKnowledgeAnswer';
 import {DtoSourceReference} from '@shared/schema/response/source/DtoSourceReference';
 
 describe('Result layout with long repository content', () => {
@@ -13,7 +15,7 @@ describe('Result layout with long repository content', () => {
     savedDirection = document.documentElement.dir;
     savedTheme = document.documentElement.dataset['theme'];
     await TestBed.configureTestingModule({
-      imports: [SourceViewerComponent, TechnicalFlowComponent],
+      imports: [SourceViewerComponent, TechnicalFlowComponent, AnswerComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()]
     }).compileComponents();
   });
@@ -27,6 +29,70 @@ describe('Result layout with long repository content', () => {
   for (const theme of ['light', 'dark']) {
     for (const direction of ['ltr', 'rtl']) {
       for (const width of [390, 1100]) {
+        it(`separates grouped database details from source evidence at ${width}px in ${theme}/${direction}`, () => {
+          const fixture = TestBed.createComponent(AnswerComponent);
+          const answer: DtoKnowledgeAnswer = {
+            project: 'Sample',
+            question: 'Explain users',
+            summary: 'Users belong to branches.',
+            inScope: true,
+            enoughEvidence: true,
+            confidence: 'high',
+            businessFlow: [],
+            technicalFlow: [],
+            apis: [],
+            integrations: [],
+            scheduledJobs: [],
+            technicalDetails: [],
+            keyFindings: [],
+            roles: [],
+            risks: ['Live database not inspected.'],
+            followUpQuestions: [],
+            database: [
+              {
+                table: 'users',
+                entity: 'User',
+                repository: 'UserRepository',
+                purpose: 'Stores users.',
+                columns: ['id bigint, primary key'],
+                relationships: ['users.branch_id → branches.id']
+              }
+            ],
+            sources: [
+              {
+                repositoryId: 'repo',
+                repositoryName: 'sample-backend',
+                fileName: 'User.java',
+                filePath: 'src/main/java/sample/User.java',
+                symbol: 'User',
+                startLine: 10,
+                endLine: 50,
+                excerpt: ''
+              }
+            ]
+          };
+          fixture.componentRef.setInput('answer', answer);
+          const host = fixture.nativeElement as HTMLElement;
+          host.style.display = 'block';
+          host.style.width = width + 'px';
+          document.documentElement.dir = direction;
+          document.documentElement.dataset['theme'] = theme;
+          fixture.detectChanges();
+
+          const wrap = host.querySelector<HTMLElement>('.answer-wrap')!;
+          const sections = [...wrap.children].filter((child) => !child.classList.contains('answer-toolbar'));
+          for (let index = 1; index < sections.length; index++) {
+            expect(sections[index].getBoundingClientRect().top - sections[index - 1].getBoundingClientRect().bottom)
+              .withContext('Every answer section, including nested grids, needs a consistent gap')
+              .toBeCloseTo(16, 0);
+          }
+          const database = host.querySelector<HTMLElement>('#database-details')!;
+          const sources = host.querySelector<HTMLElement>('#sources')!;
+          expect(sources.getBoundingClientRect().top - database.getBoundingClientRect().bottom).toBeCloseTo(16, 0);
+          expect(wrap.scrollWidth).toBeLessThanOrEqual(wrap.clientWidth + 1);
+          expect(host.querySelector('#sources .section-copy')).not.toBeNull();
+        });
+
         it(`keeps sources and actions inside ${width}px in ${theme}/${direction}`, () => {
           const fixture = TestBed.createComponent(SourceViewerComponent);
           const source: DtoSourceReference = {

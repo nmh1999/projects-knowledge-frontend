@@ -219,22 +219,63 @@ main {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  padding: 20px 24px;
+  margin-block-start: 20px;
+  padding: 14px 16px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--surface);
+  border-radius: 12px;
+  background: var(--surface-soft);
   color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
 }
 .cancelled-state p {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 180px;
   margin: 0;
 }
+.cancelled-icon {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  color: var(--muted);
+}
+.cancelled-icon::after {
+  content: '';
+  position: absolute;
+  inset: 6.5px 2px;
+  border-top: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+}
+.cancelled-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+}
 .cancelled-state button {
-  padding: 10px 16px;
+  min-height: 36px;
+  padding: 7px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface-soft);
-  color: inherit;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--blue);
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
+}
+.cancelled-state .cancelled-back {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 400;
+}
+.cancelled-state button:hover {
+  border-color: var(--blue);
+  color: var(--blue);
 }
