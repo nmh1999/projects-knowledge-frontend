@@ -1,0 +1,42 @@
+:host { display: block; min-width: 0; }
+.answer-section { min-width: 0; padding: 25px; }
+.section-title { display: flex; align-items: center; gap: 11px; margin-bottom: 19px; }
+.number { font-size: 10px; font-weight: 800; color: var(--blue); background: var(--surface-soft); padding: 7px; border-radius: 7px; }
+.section-title h3, .section-title p { margin: 0; }
+.section-title h3 { font-size: 16px; }
+.section-title p { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* Keep scrolling inside the flow, never inside individual card text. */
+.flow { display: flex; align-items: stretch; max-width: 100%; overflow-x: auto; padding-bottom: 12px; scrollbar-width: thin; scrollbar-color: #57768d transparent; }
+.flow article { flex: 0 0 240px; min-width: 0; border: 1px solid var(--line); border-top: 3px solid #7791a8; border-radius: 12px; padding: 16px; background: var(--surface); display: flex; gap: 10px; }
+.flow article > div { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.node-icon { width: 30px; height: 30px; display: grid; place-items: center; background: var(--surface-soft); border-radius: 8px; font-size: 12px; font-weight: 800; flex: none; }
+.flow small, .flow strong, .flow p { display: block; }
+.flow small { text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-size: 9px; }
+.flow strong { font-size: 12px; margin-top: 5px; }
+.flow p { font-size: 12px; color: var(--muted); margin: 7px 0 0; line-height: 1.6; white-space: pre-line; }
+.flow article[data-type=frontend] { border-top-color: #6358cf; }
+.flow article[data-type=api] { border-top-color: #ec9b32; }
+.flow article[data-type=controller] { border-top-color: #2787c1; }
+.flow article[data-type=service] { border-top-color: #16a36c; }
+.flow article[data-type=repository], .flow article[data-type=database] { border-top-color: #ce5765; }
+.flow article[data-type=integration] { border-top-color: #9b5bc6; }
+.connector { flex: 0 0 32px; display: grid; place-items: center; position: relative; }
+.connector i { width: 100%; height: 1px; background: var(--line); position: absolute; }
+.connector b { transform: rotate(-90deg); background: var(--surface); color: var(--muted); font-size: 13px; z-index: 1; padding: 2px; }
+:host-context(html[dir=rtl]) .connector b { transform: rotate(90deg); }
+.flow::-webkit-scrollbar { height: 6px; }
+.flow::-webkit-scrollbar-track { background: transparent; }
+.flow::-webkit-scrollbar-thumb { border-radius: 999px; background: #57768d; }
+.flow::-webkit-scrollbar-thumb:hover { background: #789aaf; }
+.flow::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+/* Use custom scrollbar styling on Chromium; the standard properties above are the fallback. */
+@supports selector(::-webkit-scrollbar) { .flow { scrollbar-width: auto; scrollbar-color: auto; } }
+@media (max-width: 650px) {
+  .answer-section { padding: 20px; padding-top: 28px; }
+  .flow { flex-direction: column; overflow: visible; padding-bottom: 0; }
+  .flow article { flex: 0 0 auto; width: 100%; }
+  .connector { flex: 0 0 27px; width: 100%; }
+  .connector i { height: 100%; width: 1px; }
+  .connector b, :host-context(html[dir=rtl]) .connector b { transform: none; }
+}

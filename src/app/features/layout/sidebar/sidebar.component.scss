@@ -1,0 +1,100 @@
+:host { display: block; }
+
+.sidebar {
+  position: sticky;
+  top: 72px;
+  display: flex;
+  flex-direction: column;
+  width: 286px;
+  height: calc(100vh - 72px);
+  padding: 24px 18px 20px;
+  overflow: auto;
+  border-inline-end: 1px solid rgba(255, 255, 255, .08);
+  background: linear-gradient(180deg, #0b2945 0%, #113b5c 100%);
+  color: #fff;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(178, 211, 231, .34) transparent;
+}
+
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(178, 211, 231, .3); }
+.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(178, 211, 231, .55); }
+
+.sidebar-title { padding: 0 10px 14px; }
+.sidebar-title span { display: block; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.sidebar-title small { display: block; margin-top: 5px; color: #9fb7c9; font-size: 11px; }
+
+.project-search {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  margin: 0 4px 13px;
+  padding: 0 10px;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .09);
+  color: #a9c3d5;
+}
+
+.project-search:focus-within { border-color: #65bee9; box-shadow: 0 0 0 3px rgba(80, 183, 231, .18); }
+.project-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: #fff; background: transparent; font-size: 11px; }
+.project-search input::placeholder { color: #9fb7c9; }
+
+.project-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 5px;
+  padding: 10px;
+  gap: 11px;
+  border: 0;
+  border-radius: 12px;
+  color: #dceaf3;
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.project-item:hover { background: rgba(255, 255, 255, .08); }
+.project-item.active { color: var(--navy); background: #fff; box-shadow: 0 8px 22px rgba(0, 0, 0, .2); }
+.project-icon { display: grid; flex: none; width: 36px; height: 36px; place-items: center; border-radius: 10px; color: #dff3ff; background: rgba(255, 255, 255, .1); font-size: 11px; font-weight: 800; }
+.active .project-icon { color: #fff; background: var(--navy); }
+.project-copy { flex: 1; min-width: 0; }
+.project-copy strong, .project-copy small { display: block; }
+.project-copy strong { overflow: hidden; font-size: 12px; white-space: nowrap; text-overflow: ellipsis; }
+.project-copy small { margin-top: 3px; color: #9fb7c9; font-size: 10px; }
+.project-item.active .project-copy small { color: #6d8292; }
+.chevron { color: #86a8bd; font-size: 20px; direction:ltr; }
+.project-item.active .chevron { color: #7891a4; }
+.empty-projects { padding: 18px 8px; color: #9fb7c9; font-size: 11px; text-align: center; }
+.divider { height: 1px; margin: 15px 8px; background: rgba(255, 255, 255, .11); }
+.grid { font-size: 18px; }
+.project-search button{flex:none;border:0;background:transparent;color:#c6dce9;font-size:20px;cursor:pointer;padding:0 3px}
+.project-search input::-webkit-search-cancel-button{appearance:none}
+.project-item:disabled{opacity:.5;cursor:not-allowed}
+.project-item:focus-visible{outline:2px solid #a7e0ff;outline-offset:2px}
+
+.read-only {
+  display: flex;
+  margin-top: auto;
+  padding: 12px;
+  gap: 9px;
+  border: 1px solid rgba(94, 211, 164, .28);
+  border-radius: 12px;
+  color: #bff1db;
+  background: rgba(25, 132, 91, .17);
+}
+
+.read-only strong, .read-only small { display: block; }
+.read-only strong { font-size: 11px; }
+.read-only small { margin-top: 3px; color: #8fc9ae; font-size: 9px; }
+
+@media (max-width: 760px) {
+  .sidebar { position: fixed; z-index: 20; inset-inline-start: 0; top: 72px; bottom: 0; height: auto; transform: translateX(-105%); transition: .25s; box-shadow: 10px 0 30px rgba(0, 0, 0, .22); }
+  :host-context(html[dir=rtl]) .sidebar { transform: translateX(105%); }
+  .sidebar.open, :host-context(html[dir=rtl]) .sidebar.open { transform: translateX(0); }
+}
