@@ -1,47 +1,91 @@
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
-import { appConfig } from './app.config';
-import { LanguageService } from './core/services/language.service';
-import { KnowledgeAnswer } from './core/models/knowledge-answer.model';
-import { QuestionHistoryService } from './core/services/question-history.service';
+import {provideHttpClient} from '@angular/common/http';
+import {HttpTestingController, provideHttpClientTesting} from '@angular/common/http/testing';
+import {TestBed} from '@angular/core/testing';
+import {AppComponent} from './app.component';
+import {appConfig} from './app.config';
+import {LanguageService} from '@shared/service/language.service';
+import {DtoKnowledgeAnswer} from '@shared/schema/response/knowledge/DtoKnowledgeAnswer';
+import {QuestionHistoryService} from '@shared/service/question-history.service';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     spyOn(Storage.prototype, 'getItem').and.returnValue(null);
     spyOn(Storage.prototype, 'setItem');
     spyOn(Storage.prototype, 'removeItem');
-    await TestBed.configureTestingModule({ imports: [AppComponent], providers: [provideHttpClient(), provideHttpClientTesting()] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [AppComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()]
+    }).compileComponents();
   });
-  const snapshot = { id: 'sample', name: 'Sample', repositories: [], overview: { frontend: [], backend: [], databases: [], domains: [], integrations: [], messaging: [], scheduledJobs: [] } };
-  const response: KnowledgeAnswer = { inScope: true, project: 'Sample', question: 'How does it work?', summary: 'Sample summary', businessFlow: [], technicalFlow: [], apis: [], database: [], integrations: [], scheduledJobs: [], technicalDetails: [], sources: [], confidence: 'high', keyFindings: [], roles: [], risks: [], followUpQuestions: [], enoughEvidence: true };
+  const snapshot = {
+    id: 'sample',
+    name: 'Sample',
+    repositories: [],
+    overview: {
+      frontend: [],
+      backend: [],
+      databases: [],
+      domains: [],
+      integrations: [],
+      messaging: [],
+      scheduledJobs: []
+    }
+  };
+  const response: DtoKnowledgeAnswer = {
+    inScope: true,
+    project: 'Sample',
+    question: 'How does it work?',
+    summary: 'Sample summary',
+    businessFlow: [],
+    technicalFlow: [],
+    apis: [],
+    database: [],
+    integrations: [],
+    scheduledJobs: [],
+    technicalDetails: [],
+    sources: [],
+    confidence: 'high',
+    keyFindings: [],
+    roles: [],
+    risks: [],
+    followUpQuestions: [],
+    enoughEvidence: true
+  };
 
   it('records only submitted questions and restores a draft with its format without another HTTP request', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     const http = TestBed.inject(HttpTestingController);
     const history = TestBed.inject(QuestionHistoryService);
-    fixture.detectChanges(); http.expectOne('/api/projects').flush([snapshot]);
-    app.ask('No project'); expect(history.forProject('')).toEqual([]);
-    app.selectProject('sample'); http.expectOne('/api/projects/sample').flush(snapshot); fixture.detectChanges();
+    fixture.detectChanges();
+    http.expectOne('/api/projects').flush([snapshot]);
+    app.ask('No project');
+    expect(history.forProject('')).toEqual([]);
+    app.selectProject('sample');
+    http.expectOne('/api/projects/sample').flush(snapshot);
+    fixture.detectChanges();
     app.ask('  Saved question  ', 'workflow');
     const first = http.expectOne('/api/questions');
     expect(first.request.body.question).toBe('Saved question');
     app.ask('Ignored while loading');
-    first.flush({ message: 'Failed' }, { status: 500, statusText: 'Error' });
-    expect(history.forProject('sample')).toEqual([{ question: 'Saved question', mode: 'workflow' }]);
-    app.searchMode.set('basic'); fixture.detectChanges();
+    first.flush({message: 'Failed'}, {status: 500, statusText: 'Error'});
+    expect(history.forProject('sample')).toEqual([{question: 'Saved question', mode: 'workflow'}]);
+    app.searchMode.set('basic');
+    fixture.detectChanges();
     fixture.nativeElement.querySelector('.question-history').open = true;
-    fixture.nativeElement.querySelector('.history-question').click(); fixture.detectChanges();
+    fixture.nativeElement.querySelector('.history-question').click();
+    fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('textarea').value).toBe('Saved question');
     expect(app.searchMode()).toBe('workflow');
     expect(document.activeElement).toBe(fixture.nativeElement.querySelector('textarea'));
     http.expectNone('/api/questions');
-    app.ask('   '); http.expectNone('/api/questions');
-    app.ask('Saved question', 'workflow'); http.expectOne('/api/questions').flush(response);
+    app.ask('   ');
+    http.expectNone('/api/questions');
+    app.ask('Saved question', 'workflow');
+    http.expectOne('/api/questions').flush(response);
     expect(history.forProject('sample').length).toBe(1);
-    app.openIntegration('Example'); http.expectOne('/api/integrations/details').flush(response);
+    app.openIntegration('Example');
+    http.expectOne('/api/integrations/details').flush(response);
     expect(history.forProject('sample').length).toBe(1);
     http.verify();
   });
@@ -51,20 +95,30 @@ describe('AppComponent', () => {
     const app = fixture.componentInstance;
     const http = TestBed.inject(HttpTestingController);
     const history = TestBed.inject(QuestionHistoryService);
-    const second = { ...snapshot, id: 'second', name: 'Second' };
-    history.remember('sample', 'First question', 'basic'); history.remember('second', 'Second question', 'advanced');
-    fixture.detectChanges(); http.expectOne('/api/projects').flush([snapshot, second]);
-    app.selectProject('sample'); http.expectOne('/api/projects/sample').flush(snapshot); fixture.detectChanges();
+    const second = {...snapshot, id: 'second', name: 'Second'};
+    history.remember('sample', 'First question', 'basic');
+    history.remember('second', 'Second question', 'advanced');
+    fixture.detectChanges();
+    http.expectOne('/api/projects').flush([snapshot, second]);
+    app.selectProject('sample');
+    http.expectOne('/api/projects/sample').flush(snapshot);
+    fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.history-text').textContent).toBe('First question');
-    fixture.nativeElement.querySelector('.history-question').click(); fixture.detectChanges();
-    app.selectProject('second'); http.expectOne('/api/projects/second').flush(second); fixture.detectChanges();
+    fixture.nativeElement.querySelector('.history-question').click();
+    fixture.detectChanges();
+    app.selectProject('second');
+    http.expectOne('/api/projects/second').flush(second);
+    fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('textarea').value).toBe('');
     expect(fixture.nativeElement.querySelector('.history-text').textContent).toBe('Second question');
-    fixture.nativeElement.querySelector('.clear-history').click(); fixture.detectChanges();
+    fixture.nativeElement.querySelector('.clear-history').click();
+    fixture.detectChanges();
     expect(history.forProject('second')).toEqual([]);
     expect(history.forProject('sample').length).toBe(1);
-    app.loadProjects(); http.expectOne('/api/projects').flush([snapshot, second]);
-    expect(app.selectedId()).toBe(''); expect(history.forProject('sample').length).toBe(1);
+    app.loadProjects();
+    http.expectOne('/api/projects').flush([snapshot, second]);
+    expect(app.selectedId()).toBe('');
+    expect(history.forProject('sample').length).toBe(1);
     http.verify();
   });
 
@@ -103,7 +157,7 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('app-answer')).toBeNull();
     expect(fixture.nativeElement.querySelector('app-project-overview')).not.toBeNull();
     expect(app.selectedProject()).toEqual(snapshot);
-    http.expectNone(request => request.url.startsWith('/api/'));
+    http.expectNone((request) => request.url.startsWith('/api/'));
     http.verify();
   });
 
@@ -112,7 +166,7 @@ describe('AppComponent', () => {
     const http = TestBed.inject(HttpTestingController);
     const app = fixture.componentInstance;
     fixture.detectChanges();
-    const second = { ...snapshot, id: 'second', name: 'Second' };
+    const second = {...snapshot, id: 'second', name: 'Second'};
     http.expectOne('/api/projects').flush([snapshot, second]);
     app.selectProject('sample');
     http.expectOne('/api/projects/sample').flush(snapshot);
@@ -126,7 +180,7 @@ describe('AppComponent', () => {
     old.flush(response);
     expect(app.answer()).toBeNull();
     expect(app.loading()).toBeTrue();
-    current.flush({ ...response, project: 'Second', question: 'New question' });
+    current.flush({...response, project: 'Second', question: 'New question'});
     expect(app.answer()?.question).toBe('New question');
     expect(app.loading()).toBeFalse();
     http.verify();
@@ -138,9 +192,17 @@ describe('AppComponent', () => {
       const http = TestBed.inject(HttpTestingController);
       const labels = TestBed.inject(LanguageService);
       labels.current.set(language);
-      const overview = { frontend: [], backend: [], databases: [], domains: [], integrations: [], messaging: [], scheduledJobs: [] };
-      const first = { id: 'first', name: 'First', repositories: [], overview };
-      const second = { id: 'second', name: 'Second', repositories: [], overview };
+      const overview = {
+        frontend: [],
+        backend: [],
+        databases: [],
+        domains: [],
+        integrations: [],
+        messaging: [],
+        scheduledJobs: []
+      };
+      const first = {id: 'first', name: 'First', repositories: [], overview};
+      const second = {id: 'second', name: 'Second', repositories: [], overview};
       fixture.detectChanges();
       http.expectOne('/api/projects').flush([first, second]);
       fixture.detectChanges();
@@ -150,9 +212,13 @@ describe('AppComponent', () => {
       expect(fixture.nativeElement.querySelector('.project-item.active')).toBeNull();
       expect(fixture.nativeElement.querySelector('app-question-input')).toBeNull();
       expect(fixture.nativeElement.querySelector('app-project-overview')).toBeNull();
-      app.ask('Which framework?'); app.openIntegration('Example'); app.refreshOverview();
-      http.expectNone(request => request.url !== '/api/projects');
-      const buttons = fixture.nativeElement.querySelectorAll('app-sidebar nav .project-item') as NodeListOf<HTMLButtonElement>;
+      app.ask('Which framework?');
+      app.openIntegration('Example');
+      app.refreshOverview();
+      http.expectNone((request) => request.url !== '/api/projects');
+      const buttons = fixture.nativeElement.querySelectorAll(
+        'app-sidebar nav .project-item'
+      ) as NodeListOf<HTMLButtonElement>;
       buttons[1].click();
       http.expectOne('/api/projects/second').flush(second);
       fixture.detectChanges();
@@ -165,27 +231,45 @@ describe('AppComponent', () => {
       expect(app.selectedId()).toBe('');
       http.expectNone('/api/projects/first');
       fixture.nativeElement.querySelector('.project-item.all').click();
-      http.expectOne('/api/projects/all').flush({ ...first, id: 'all', name: 'All Projects' });
+      http.expectOne('/api/projects/all').flush({...first, id: 'all', name: 'All Projects'});
       expect(app.selectedId()).toBe('all');
       http.verify();
     });
   }
 
-  it('creates the Projects Knowledge shell', () => { const fixture = TestBed.createComponent(AppComponent); expect(fixture.componentInstance).toBeTruthy(); fixture.detectChanges(); expect((fixture.nativeElement as HTMLElement).textContent).toContain('Projects Knowledge'); });
+  it('creates the Projects Knowledge shell', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    expect(fixture.componentInstance).toBeTruthy();
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Projects Knowledge');
+  });
   it('defaults requests to Basic and retries with the original mode', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
     http.expectOne('/api/projects').flush([]);
-    app.projects.set([{ id: 'project', name: 'Project', repositories: [], overview: {
-      frontend: [], backend: [], databases: [], domains: [], integrations: [], messaging: [], scheduledJobs: []
-    } }]);
+    app.projects.set([
+      {
+        id: 'project',
+        name: 'Project',
+        repositories: [],
+        overview: {
+          frontend: [],
+          backend: [],
+          databases: [],
+          domains: [],
+          integrations: [],
+          messaging: [],
+          scheduledJobs: []
+        }
+      }
+    ]);
     app.selectedId.set('project');
     app.ask('Which framework?');
     const first = http.expectOne('/api/questions');
     expect(first.request.body.mode).toBe('basic');
-    first.flush({ message: 'Failed' }, { status: 500, statusText: 'Error' });
+    first.flush({message: 'Failed'}, {status: 500, statusText: 'Error'});
     app.searchMode.set('advanced');
     fixture.detectChanges();
     fixture.nativeElement.querySelector('.error-banner button').click();
@@ -201,7 +285,7 @@ describe('AppComponent', () => {
     app.ask('Explain the review workflow');
     const workflow = http.expectOne('/api/questions');
     expect(workflow.request.body.mode).toBe('workflow');
-    workflow.flush({ message: 'Failed' }, { status: 500, statusText: 'Error' });
+    workflow.flush({message: 'Failed'}, {status: 500, statusText: 'Error'});
     app.searchMode.set('basic');
     fixture.detectChanges();
     fixture.nativeElement.querySelector('.error-banner button').click();
@@ -213,7 +297,10 @@ describe('AppComponent', () => {
 
   it('runs the shell with the actual application providers and no routing setup', async () => {
     TestBed.resetTestingModule();
-    await TestBed.configureTestingModule({ imports: [AppComponent], providers: [...appConfig.providers, provideHttpClientTesting()] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [AppComponent],
+      providers: [...appConfig.providers, provideHttpClientTesting()]
+    }).compileComponents();
     const fixture = TestBed.createComponent(AppComponent);
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
@@ -235,7 +322,7 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.textContent).toContain(labels.t('noCodexProjects'));
     expect(fixture.nativeElement.querySelector('app-question-input')).toBeNull();
     fixture.nativeElement.querySelector('.fatal button').click();
-    http.expectOne('/api/projects').flush({ message: 'Codex unavailable' }, { status: 503, statusText: 'Unavailable' });
+    http.expectOne('/api/projects').flush({message: 'Codex unavailable'}, {status: 503, statusText: 'Unavailable'});
     fixture.detectChanges();
     expect(app.projects()).toEqual([]);
     expect(fixture.nativeElement.textContent).toContain('Codex unavailable');
@@ -248,9 +335,22 @@ describe('AppComponent', () => {
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
     http.expectOne('/api/projects').flush([]);
-    app.projects.set([{ id: 'project', name: 'Project', repositories: [], overview: {
-      frontend: [], backend: [], databases: [], domains: [], integrations: [], messaging: [], scheduledJobs: []
-    } }]);
+    app.projects.set([
+      {
+        id: 'project',
+        name: 'Project',
+        repositories: [],
+        overview: {
+          frontend: [],
+          backend: [],
+          databases: [],
+          domains: [],
+          integrations: [],
+          messaging: [],
+          scheduledJobs: []
+        }
+      }
+    ]);
     app.selectedId.set('project');
     app.openIntegration('Elm Billing');
     expect(app.loading()).toBeTrue();
@@ -259,7 +359,7 @@ describe('AppComponent', () => {
     expect(first.request.body.name).toBe('Elm Billing');
     app.openIntegration('MCI');
     http.expectNone('/api/integrations/details');
-    first.flush({ message: 'Integration failed' }, { status: 500, statusText: 'Error' });
+    first.flush({message: 'Integration failed'}, {status: 500, statusText: 'Error'});
     expect(app.loading()).toBeFalse();
     expect(app.error()).toBe('Integration failed');
     fixture.detectChanges();
@@ -278,21 +378,36 @@ describe('AppComponent', () => {
     const app = fixture.componentInstance;
     const http = TestBed.inject(HttpTestingController);
     const labels = TestBed.inject(LanguageService);
-    const project = { id: 'project', name: 'Project', repositories: [], overview: {
-      frontend: [], backend: [], databases: [], domains: [], integrations: [] as string[], messaging: [], scheduledJobs: []
-    } };
+    const project = {
+      id: 'project',
+      name: 'Project',
+      repositories: [],
+      overview: {
+        frontend: [],
+        backend: [],
+        databases: [],
+        domains: [],
+        integrations: [] as string[],
+        messaging: [],
+        scheduledJobs: []
+      }
+    };
     fixture.detectChanges();
     http.expectOne('/api/projects').flush([project]);
     app.selectProject(project.id);
     expect(app.overviewLoading()).toBeTrue();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain(labels.t('loadingOverview'));
-    http.expectOne('/api/projects/project').flush({ message: 'Overview unavailable' }, { status: 503, statusText: 'Unavailable' });
+    http
+      .expectOne('/api/projects/project')
+      .flush({message: 'Overview unavailable'}, {status: 503, statusText: 'Unavailable'});
     fixture.detectChanges();
     expect(app.overviewLoading()).toBeFalse();
     expect(fixture.nativeElement.querySelector('app-project-overview')).toBeNull();
     fixture.nativeElement.querySelector('.overview-error button').click();
-    http.expectOne('/api/projects/project').flush({ ...project, overview: { ...project.overview, integrations: ['Orbit'] } });
+    http
+      .expectOne('/api/projects/project')
+      .flush({...project, overview: {...project.overview, integrations: ['Orbit']}});
     fixture.detectChanges();
     expect(app.overviewError()).toBe('');
     expect(fixture.nativeElement.textContent).toContain('Orbit');
@@ -308,9 +423,17 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     const http = TestBed.inject(HttpTestingController);
-    const overview = { frontend: [], backend: [], databases: [], domains: [], integrations: [], messaging: [], scheduledJobs: [] };
-    const first = { id: 'first', name: 'First', repositories: [], overview };
-    const second = { id: 'second', name: 'Second', repositories: [], overview };
+    const overview = {
+      frontend: [],
+      backend: [],
+      databases: [],
+      domains: [],
+      integrations: [],
+      messaging: [],
+      scheduledJobs: []
+    };
+    const first = {id: 'first', name: 'First', repositories: [], overview};
+    const second = {id: 'second', name: 'Second', repositories: [], overview};
     fixture.detectChanges();
     http.expectOne('/api/projects').flush([first, second]);
     app.selectProject(first.id);
@@ -322,8 +445,8 @@ describe('AppComponent', () => {
     app.selectProject('first');
     const failing = http.expectOne('/api/projects/first');
     app.selectProject('all');
-    http.expectOne('/api/projects/all').flush({ id: 'all', name: 'All Projects', repositories: [], overview });
-    failing.flush({ message: 'Old failure' }, { status: 500, statusText: 'Error' });
+    http.expectOne('/api/projects/all').flush({id: 'all', name: 'All Projects', repositories: [], overview});
+    failing.flush({message: 'Old failure'}, {status: 500, statusText: 'Error'});
     expect(app.selectedProject()?.id).toBe('all');
     expect(app.overviewError()).toBe('');
     expect(app.overviewLoading()).toBeFalse();
@@ -334,9 +457,21 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     const http = TestBed.inject(HttpTestingController);
-    const project = { id: 'project', name: 'Project', repositories: [], overviewUpdatedAt: '2026-01-01T10:00:00Z', overview: {
-      frontend: [], backend: ['Java'], databases: [], domains: [], integrations: [], messaging: [], scheduledJobs: []
-    } };
+    const project = {
+      id: 'project',
+      name: 'Project',
+      repositories: [],
+      overviewUpdatedAt: '2026-01-01T10:00:00Z',
+      overview: {
+        frontend: [],
+        backend: ['Java'],
+        databases: [],
+        domains: [],
+        integrations: [],
+        messaging: [],
+        scheduledJobs: []
+      }
+    };
     fixture.detectChanges();
     http.expectOne('/api/projects').flush([project]);
     app.selectProject(project.id);
@@ -351,14 +486,14 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('.refresh-overview').disabled).toBeTrue();
     app.refreshOverview();
     http.expectNone('/api/projects/project/overview/refresh');
-    first.flush({ message: 'Temporary failure' }, { status: 503, statusText: 'Unavailable' });
+    first.flush({message: 'Temporary failure'}, {status: 503, statusText: 'Unavailable'});
     fixture.detectChanges();
     expect(app.overviewRefreshing()).toBeFalse();
     expect(app.selectedProject()?.overviewUpdatedAt).toBe(project.overviewUpdatedAt);
     expect(fixture.nativeElement.querySelector('app-project-overview')).not.toBeNull();
     fixture.nativeElement.querySelector('.overview-refresh-error button').click();
     const retry = http.expectOne('/api/projects/project/overview/refresh');
-    retry.flush({ ...project, overviewUpdatedAt: '2026-01-01T11:00:00Z' });
+    retry.flush({...project, overviewUpdatedAt: '2026-01-01T11:00:00Z'});
     fixture.detectChanges();
     expect(app.overviewRefreshError()).toBe('');
     expect(app.overviewRefreshing()).toBeFalse();
@@ -371,9 +506,17 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     const http = TestBed.inject(HttpTestingController);
-    const overview = { frontend: [], backend: [], databases: [], domains: [], integrations: [], messaging: [], scheduledJobs: [] };
-    const first = { id: 'first', name: 'First', repositories: [], overview, overviewUpdatedAt: '2026-01-01T10:00:00Z' };
-    const second = { ...first, id: 'second', name: 'Second' };
+    const overview = {
+      frontend: [],
+      backend: [],
+      databases: [],
+      domains: [],
+      integrations: [],
+      messaging: [],
+      scheduledJobs: []
+    };
+    const first = {id: 'first', name: 'First', repositories: [], overview, overviewUpdatedAt: '2026-01-01T10:00:00Z'};
+    const second = {...first, id: 'second', name: 'Second'};
     fixture.detectChanges();
     http.expectOne('/api/projects').flush([first, second]);
     app.selectProject(first.id);
@@ -382,14 +525,14 @@ describe('AppComponent', () => {
     const pending = http.expectOne('/api/projects/first/overview/refresh');
     app.selectProject('second');
     http.expectOne('/api/projects/second').flush(second);
-    pending.flush({ ...first, overviewUpdatedAt: '2026-01-01T11:00:00Z' });
+    pending.flush({...first, overviewUpdatedAt: '2026-01-01T11:00:00Z'});
     expect(app.selectedProject()?.id).toBe('second');
     expect(app.selectedProject()?.overviewUpdatedAt).toBe(second.overviewUpdatedAt);
     app.refreshOverview();
     const failing = http.expectOne('/api/projects/second/overview/refresh');
     app.selectProject('first');
     http.expectOne('/api/projects/first').flush(first);
-    failing.flush({ message: 'Old failure' }, { status: 503, statusText: 'Unavailable' });
+    failing.flush({message: 'Old failure'}, {status: 503, statusText: 'Unavailable'});
     expect(app.overviewRefreshError()).toBe('');
     expect(app.overviewRefreshing()).toBeFalse();
     http.verify();

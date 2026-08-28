@@ -1,0 +1,26 @@
+<section class="answer-section">
+  <div class="section-title">
+    <span class="number">02</span>
+    <div>
+      <h3>{{ language.t('technicalFlow') }}</h3>
+      <p>{{ language.t('technicalSubtitle') }}</p>
+    </div>
+  </div>
+  <div class="flow" role="list">
+    @for (node of nodes(); track $index) {
+      <article role="listitem" [attr.data-type]="node.type">
+        <span class="node-icon">{{ icon(node.type) }}</span>
+        <div>
+          <small>{{ label(node.type) }}</small
+          ><strong>{{ node.name }}</strong>
+          @if (node.detail) {
+            <p>{{ node.detail }}</p>
+          }
+        </div>
+      </article>
+      @if (!$last) {
+        <div class="connector" aria-hidden="true"><i></i><b>↓</b></div>
+      }
+    }
+  </div>
+</section>

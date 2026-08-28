@@ -1,0 +1,14 @@
+<section class="detail-card">
+  <h3>
+    {{ language.t('apis') }} <span>{{ items().length }}</span>
+  </h3>
+  @for (item of items(); track item.method + item.path) {
+    <article>
+      <b [attr.data-method]="item.method">{{ item.method }}</b>
+      <div>
+        <code>{{ item.path }}</code>
+        <p>{{ item.controller }} · {{ item.methodName }}</p>
+      </div>
+    </article>
+  }
+</section>

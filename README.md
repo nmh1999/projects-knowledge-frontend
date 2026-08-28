@@ -44,6 +44,40 @@ npm run build
 
 The browser bundle is written to `dist/frontend/browser`. The development proxy is not included in this bundle: a server hosting the built files must also route `/api` to the backend. Neither project has to be checked out next to the other.
 
+## Code organization
+
+The source follows the Public Marts frontend conventions without copying its UI or business-specific dependencies:
+
+```text
+src/app/
+  component/
+    project/    project overview
+    knowledge/  question input, answer sections and source viewer
+  shared/
+    component/general/   global HTTP loading indicator
+    component/business/  reusable workflow diagram and canvas
+    layout/              header and sidebar
+    service/             language, theme, history and loading state
+    service/integration/ project, question, integration and source HTTP services
+    schema/request/      Req... API request types
+    schema/response/     Dto... API response types
+    schema/general/      local-only types
+    enums/               language and answer-format types
+    interceptor/         global HTTP loading
+    utils/workflow/      graph layout, rendering data and export
+src/assets/i18n/          en.json and ar.json
+src/environments/        getEnv() and the same-origin API base
+```
+
+- Components remain Angular 19 standalone components using `inject()`, reactive forms and signals. Each component has separate `.ts`, `.html` and `.scss` files.
+- Import shared and feature code with `@shared/*` and `@component/*`; assets/environment use `@assets/*` and `@environment/*`.
+- Keep each HTTP service scoped to its backend area. JSON field names and the existing `/api` contract are unchanged.
+- Maintain matching translation keys in both JSON files. They are bundled locally, without extra translation HTTP requests.
+- Keep UI state and browser-only history separate from API response schemas. No reference-project roles, integrations, configuration or credentials belong here.
+- Use `npm run format` / `npm run format:check` for the checked-in formatting conventions. Tests live beside their components/services.
+
+The refactor preserves the interface, language defaults, themes, history, answer modes, cache controls, loading and workflow exports. It does not introduce PrimeNG, SSR, authentication or reference-project features.
+
 ## GitHub
 
 Publish this folder as its own repository, not the enclosing workspace. Keep `src`, `public`, configuration, and the npm lockfile; do not commit dependencies, build output, editor settings, or credentials. `.gitignore` excludes those local files.

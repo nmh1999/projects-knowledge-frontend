@@ -1,7 +1,0 @@
-import { Component, inject, input } from '@angular/core';
-import { FlowNode } from '../../../core/models/knowledge-answer.model';
-import { LanguageService } from '../../../core/services/language.service';
-
-@Component({selector:'app-technical-flow',standalone:true,template:`
-  <section class="answer-section"><div class="section-title"><span class="number">02</span><div><h3>{{language.t('technicalFlow')}}</h3><p>{{language.t('technicalSubtitle')}}</p></div></div><div class="flow" role="list">@for(node of nodes();track $index){<article role="listitem" [attr.data-type]="node.type"><span class="node-icon">{{icon(node.type)}}</span><div><small>{{label(node.type)}}</small><strong>{{node.name}}</strong>@if(node.detail){<p>{{node.detail}}</p>}</div></article>@if(!$last){<div class="connector" aria-hidden="true"><i></i><b>↓</b></div>}}</div></section>`,styleUrl:'./technical-flow.component.scss'})
-export class TechnicalFlowComponent{readonly language=inject(LanguageService);readonly nodes=input<FlowNode[]>([]);label(type:string){const key=type==='scheduler'?'scheduledJobsTitle':type==='integration'?'integrations':type==='database'?'database':type==='frontend'?'frontend':type==='entity'?'entity':'';return key?this.language.t(key):type.replace('-', ' ');}icon(type:string){return ({frontend:'◇','frontend-service':'⇢',api:'↗',controller:'C',service:'S',repository:'R',entity:'E',database:'▱',integration:'⌁',scheduler:'◷',messaging:'⇄',configuration:'⚙'} as Record<string,string>)[type]||'·';}}

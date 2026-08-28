@@ -1,0 +1,14 @@
+<section class="detail-card">
+  <h3>
+    {{ language.t('integrations') }} <span>{{ items().length }}</span>
+  </h3>
+  @for (item of items(); track item.name) {
+    <article>
+      <span>⌁</span>
+      <div>
+        <strong>{{ item.name }}</strong>
+        <p>{{ item.purpose }}</p>
+      </div>
+    </article>
+  }
+</section>

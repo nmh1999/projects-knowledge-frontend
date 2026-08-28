@@ -1,0 +1,30 @@
+<header class="app-header">
+  <button
+    class="menu-button"
+    type="button"
+    [attr.aria-label]="language.t('toggleProjects')"
+    [attr.aria-expanded]="menuOpen()"
+    aria-controls="project-navigation"
+    (click)="menuToggle.emit()"
+  >
+    <span></span><span></span><span></span>
+  </button>
+  <div class="brand">
+    <span class="brand-mark">PK</span
+    ><span
+      ><strong>Projects Knowledge</strong><small>{{ language.t('repositoryIntelligence') }}</small></span
+    >
+  </div>
+  <div class="header-actions">
+    <button class="language-button" type="button" (click)="language.toggle()">{{ language.t('switchLanguage') }}</button
+    ><button
+      class="language-button theme-button"
+      type="button"
+      (click)="theme.toggle()"
+      [attr.aria-label]="language.t(theme.isDark() ? 'lightMode' : 'darkMode')"
+      [title]="language.t(theme.isDark() ? 'lightMode' : 'darkMode')"
+    >
+      {{ theme.isDark() ? '☀' : '☾' }}
+    </button>
+  </div>
+</header>

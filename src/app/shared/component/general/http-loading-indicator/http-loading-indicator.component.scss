@@ -1,0 +1,41 @@
+.http-loading {
+  position: fixed;
+  z-index: 9999999;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.5);
+}
+.spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  transform: translate(-50%, -50%);
+}
+.spinner span {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #0b2945;
+  opacity: 0.6;
+  animation: bounce 2s infinite ease-in-out;
+}
+.spinner span:last-child {
+  animation-delay: -1s;
+}
+strong {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+@keyframes bounce {
+  0%,
+  100% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+}

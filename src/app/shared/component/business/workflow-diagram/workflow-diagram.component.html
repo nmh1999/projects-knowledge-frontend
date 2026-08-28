@@ -1,0 +1,163 @@
+@if (scene(); as graph) {
+  @if (graph.nodes.length) {
+    <div class="diagram-toolbar">
+      <p class="diagram-hint">{{ language.t('diagramExploreHint') }}</p>
+      <ng-container *ngTemplateOutlet="controls; context: {$implicit: 'inline'}" />
+    </div>
+    <div class="diagram-legend" [attr.aria-label]="language.t('diagramLegend')">
+      <span
+        ><i class="legend-terminal" aria-hidden="true"></i>{{ language.t('diagramType_start') }} /
+        {{ language.t('diagramType_end') }}</span
+      >
+      <span><i class="legend-action" aria-hidden="true"></i>{{ language.t('diagramType_action') }}</span>
+      <span><i class="legend-decision" aria-hidden="true"></i>{{ language.t('diagramType_decision') }}</span>
+      <span><i class="legend-return" aria-hidden="true"></i>{{ language.t('diagramReturn') }}</span>
+    </div>
+    <div
+      #inlineViewport
+      class="diagram-scroll"
+      tabindex="0"
+      role="region"
+      [attr.aria-label]="language.t('workflowDiagram')"
+      dir="ltr"
+      [class.dragging]="dragging() === 'inline'"
+      (pointerdown)="startPan('inline', $event)"
+      (pointermove)="movePan($event)"
+      (pointerup)="endPan($event)"
+      (pointercancel)="endPan($event)"
+      (wheel)="wheel('inline', $event)"
+      (dblclick)="openModal()"
+    >
+      <div class="diagram-stage"><app-workflow-canvas [scene]="graph" [scale]="inlineScale()" /></div>
+    </div>
+    @if (exportError()) {
+      <p class="export-error" role="alert">{{ language.t('diagramSaveError') }}</p>
+    }
+    @if (downloadStarted()) {
+      <p class="export-status" role="status">{{ language.t('diagramDownloadStarted') }}</p>
+    }
+    <ul class="sr-only">
+      @for (edge of graph.edges; track $index) {
+        <li>{{ edge.description }}</li>
+      }
+    </ul>
+
+    <dialog
+      #modal
+      class="diagram-modal"
+      [attr.aria-labelledby]="modalTitleId"
+      (close)="onModalClosed()"
+      (cancel)="closeModal($event)"
+      (keydown.escape)="closeModal($event)"
+      (click)="backdropClick($event)"
+    >
+      <header class="modal-header">
+        <div>
+          <h2 [id]="modalTitleId">{{ language.t('workflowDiagram') }}</h2>
+          <p>{{ language.t('diagramExploreHint') }}</p>
+        </div>
+        <button
+          type="button"
+          class="close-modal"
+          autofocus
+          [attr.aria-label]="language.t('close')"
+          (click)="closeModal()"
+        >
+          ×
+        </button>
+      </header>
+      <div class="modal-tools"><ng-container *ngTemplateOutlet="controls; context: {$implicit: 'modal'}" /></div>
+      <div
+        #modalViewport
+        class="diagram-scroll modal-viewport"
+        tabindex="0"
+        role="region"
+        [attr.aria-label]="language.t('workflowDiagram')"
+        dir="ltr"
+        [class.dragging]="dragging() === 'modal'"
+        (pointerdown)="startPan('modal', $event)"
+        (pointermove)="movePan($event)"
+        (pointerup)="endPan($event)"
+        (pointercancel)="endPan($event)"
+        (wheel)="wheel('modal', $event)"
+      >
+        @if (modalOpen()) {
+          <div class="diagram-stage"><app-workflow-canvas [scene]="graph" [scale]="modalScale()" /></div>
+        }
+      </div>
+      <footer class="modal-footer">
+        <span>{{ language.t('diagramSaveFullHint') }}</span>
+        @if (exportError()) {
+          <span class="export-error" role="alert">{{ language.t('diagramSaveError') }}</span>
+        }
+        @if (downloadStarted()) {
+          <span class="export-status" role="status">{{ language.t('diagramDownloadStarted') }}</span>
+        }
+      </footer>
+    </dialog>
+  }
+}
+
+<ng-template #controls let-view>
+  <div class="diagram-controls">
+    <div class="orientation-controls" role="group" [attr.aria-label]="language.t('diagramOrientation')">
+      <button
+        type="button"
+        [class.selected]="orientation() === 'vertical'"
+        [attr.aria-pressed]="orientation() === 'vertical'"
+        (click)="changeOrientation('vertical')"
+      >
+        {{ language.t('diagramVertical') }}
+      </button>
+      <button
+        type="button"
+        [class.selected]="orientation() === 'horizontal'"
+        [attr.aria-pressed]="orientation() === 'horizontal'"
+        (click)="changeOrientation('horizontal')"
+      >
+        {{ language.t('diagramHorizontal') }}
+      </button>
+    </div>
+    <div class="zoom-controls" role="group" [attr.aria-label]="language.t('diagramZoom')">
+      <button
+        type="button"
+        class="zoom-out"
+        [disabled]="scale(view) <= 0.1"
+        [attr.aria-label]="language.t('diagramZoomOut')"
+        (click)="zoom(view, -0.2)"
+      >
+        −
+      </button>
+      <button
+        type="button"
+        class="zoom-reset"
+        [attr.aria-label]="language.t('diagramActualSize')"
+        (click)="setZoom(view, 1)"
+      >
+        {{ percent(view) }}%
+      </button>
+      <button
+        type="button"
+        class="zoom-in"
+        [disabled]="scale(view) >= 3"
+        [attr.aria-label]="language.t('diagramZoomIn')"
+        (click)="zoom(view, 0.2)"
+      >
+        +
+      </button>
+    </div>
+    <button type="button" class="fit-button" (click)="fit(view)">⤢ {{ language.t('diagramFit') }}</button>
+    <button type="button" class="readable-button" (click)="fit(view, true)">{{ language.t('diagramReadable') }}</button>
+    @if (view === 'inline') {
+      <button type="button" class="expand-button" (click)="openModal()">↗ {{ language.t('diagramExpand') }}</button>
+    }
+    <div class="save-controls" role="group" [attr.aria-label]="language.t('diagramSave')">
+      <button type="button" class="save-png" [disabled]="!!exporting()" (click)="save('png', view)">
+        {{ exporting() === 'png' ? language.t('diagramSaving') : language.t('diagramSavePng') }}
+      </button>
+      <button type="button" class="save-svg" [disabled]="!!exporting()" (click)="save('svg', view)">
+        {{ exporting() === 'svg' ? language.t('diagramSaving') : 'SVG' }}
+      </button>
+    </div>
+  </div>
+</ng-template>

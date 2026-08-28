@@ -1,0 +1,62 @@
+<aside id="project-navigation" class="sidebar" [class.open]="open()">
+  <div class="sidebar-title">
+    <span>{{ language.t('projectsLabel') }}</span
+    ><small>{{ language.count('projects', projects().length) }}</small>
+  </div>
+  <div class="project-search">
+    <span aria-hidden="true">⌕</span
+    ><input
+      type="search"
+      [value]="query()"
+      (input)="updateQuery($event)"
+      [placeholder]="language.t('searchProjects')"
+      [attr.aria-label]="language.t('searchProjects')"
+    />
+    @if (query()) {
+      <button type="button" [attr.aria-label]="language.t('clearProjectSearch')" (click)="query.set('')">×</button>
+    }
+  </div>
+  <nav [attr.aria-label]="language.t('projectsLabel')">
+    @for (project of filteredProjects(); track project.id) {
+      <button
+        type="button"
+        class="project-item"
+        [class.active]="selectedId() === project.id"
+        [attr.aria-current]="selectedId() === project.id ? 'true' : null"
+        [title]="project.name"
+        (click)="selected.emit(project.id)"
+      >
+        <span class="project-icon" aria-hidden="true">{{ initials(project.name) }}</span
+        ><span class="project-copy"
+          ><strong
+            ><bdi dir="auto">{{ project.name }}</bdi></strong
+          ><small>{{ language.count('repositories', project.repositories.length) }}</small></span
+        ><span class="chevron" aria-hidden="true">›</span>
+      </button>
+    } @empty {
+      <p class="empty-projects" role="status">{{ language.t('noProjectsFound') }}</p>
+    }
+  </nav>
+  <div class="divider"></div>
+  <button
+    type="button"
+    class="project-item all"
+    [disabled]="!projects().length"
+    [class.active]="selectedId() === 'all'"
+    [attr.aria-current]="selectedId() === 'all' ? 'true' : null"
+    (click)="selected.emit('all')"
+  >
+    <span class="project-icon grid" aria-hidden="true">⌘</span
+    ><span class="project-copy"
+      ><strong>{{ language.t('allProjects') }}</strong
+      ><small>{{ language.t('crossProjectSearch') }}</small></span
+    >
+  </button>
+  <div class="read-only">
+    <span>✓</span>
+    <div>
+      <strong>{{ language.t('readOnly') }}</strong
+      ><small>{{ language.t('protected') }}</small>
+    </div>
+  </div>
+</aside>

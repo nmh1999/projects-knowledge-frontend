@@ -1,0 +1,17 @@
+<section class="answer-section">
+  <div class="section-title">
+    <span class="number">01</span>
+    <div>
+      <h3>{{ language.t('businessFlow') }}</h3>
+      <p>{{ language.t('businessSubtitle') }}</p>
+    </div>
+  </div>
+  <ol>
+    @for (step of steps(); track $index) {
+      <li>
+        <span>{{ $index + 1 }}</span>
+        <p>{{ step }}</p>
+      </li>
+    }
+  </ol>
+</section>

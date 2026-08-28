@@ -1,0 +1,112 @@
+<app-http-loading-indicator />
+<app-header [menuOpen]="menuOpen()" (menuToggle)="toggleMenu()" />
+<div class="shell">
+  <app-sidebar
+    [projects]="projects()"
+    [selectedId]="selectedId()"
+    [open]="menuOpen()"
+    (selected)="selectProject($event)"
+  />
+  @if (menuOpen()) {
+    <button
+      class="mobile-backdrop"
+      [attr.aria-label]="language.t('closeNavigation')"
+      (click)="menuOpen.set(false)"
+    ></button>
+  }
+  <main>
+    @if (projectsLoading()) {
+      <section class="fatal" role="status">
+        <p>{{ language.t('loadingProjects') }}</p>
+      </section>
+    } @else if (error() && !projects().length) {
+      <section class="fatal">
+        <span>!</span>
+        <h2>{{ language.t('unableConnect') }}</h2>
+        <p>{{ error() }}</p>
+        <button type="button" (click)="loadProjects()">{{ language.t('tryAgain') }}</button>
+      </section>
+    } @else if (!projects().length) {
+      <section class="fatal" role="status">
+        <h2>{{ language.t('noCodexProjects') }}</h2>
+        <p>{{ language.t('noCodexProjectsHint') }}</p>
+        <button type="button" (click)="loadProjects()">{{ language.t('refreshProjects') }}</button>
+      </section>
+    } @else if (!selectedId()) {
+      <section class="project-prompt" role="status">
+        <span aria-hidden="true">▦</span>
+        <h2>{{ language.t('chooseProject') }}</h2>
+        <p>{{ language.t('chooseProjectHint') }}</p>
+      </section>
+    } @else {
+      <div class="content">
+        <app-question-input
+          [projectName]="scopeName()"
+          [resetKey]="selectedId()"
+          [loading]="loading()"
+          [mode]="searchMode()"
+          [history]="recentQuestions()"
+          [historyPersistent]="questionHistory.persistent()"
+          (historyCleared)="clearQuestionHistory()"
+          (modeChanged)="searchMode.set($event)"
+          (asked)="ask($event)"
+        />
+        @if (error()) {
+          <div class="error-banner" role="alert">
+            <span>!</span>
+            <p>{{ error() }}</p>
+            @if (lastIntegration()) {
+              <button type="button" (click)="openIntegration(lastIntegration())">{{ language.t('tryAgain') }}</button>
+            } @else if (lastQuestion()) {
+              <button type="button" (click)="ask(lastQuestion(), lastSearchMode())">
+                {{ language.t('retryQuestion') }}
+              </button>
+            }
+          </div>
+        }
+        <div id="results-region">
+          @if (answer() && !loading()) {
+            <div class="result-context">
+              <button class="back-overview" type="button" (click)="showOverview()">
+                <span aria-hidden="true">{{ language.isArabic() ? '→' : '←' }}</span
+                >{{ language.t('backToOverview') }}
+              </button>
+              <div>
+                <small>{{ language.t(lastIntegration() ? 'integrationDetails' : 'answerFor') }}</small>
+                <p dir="auto">{{ lastIntegration() || answer()?.question || lastQuestion() }}</p>
+              </div>
+            </div>
+            <app-answer [answer]="answer()" />
+          }
+          @if (!answer() && !loading()) {
+            @if (overviewLoading()) {
+              <p role="status">{{ language.t('loadingOverview') }}</p>
+            } @else if (overviewError()) {
+              <div class="error-banner overview-error" role="alert">
+                <span>!</span>
+                <p>{{ overviewError() }}</p>
+                <button type="button" (click)="selectProject(selectedId())">{{ language.t('tryAgain') }}</button>
+              </div>
+            } @else {
+              @if (overviewRefreshError()) {
+                <div class="error-banner overview-refresh-error" role="alert">
+                  <span>!</span>
+                  <p>{{ language.t('overviewRefreshFailed') }} {{ overviewRefreshError() }}</p>
+                  <button type="button" [disabled]="overviewRefreshing()" (click)="refreshOverview()">
+                    {{ language.t('tryAgain') }}
+                  </button>
+                </div>
+              }
+              <app-project-overview
+                [project]="selectedProject()"
+                [refreshing]="overviewRefreshing()"
+                (refreshRequested)="refreshOverview()"
+                (integrationSelected)="openIntegration($event)"
+              />
+            }
+          }
+        </div>
+      </div>
+    }
+  </main>
+</div>

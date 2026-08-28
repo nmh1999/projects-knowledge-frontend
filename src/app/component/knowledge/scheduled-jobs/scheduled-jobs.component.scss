@@ -1,0 +1,47 @@
+.detail-card {
+  height: 100%;
+  padding: 20px;
+}
+h3 {
+  font-size: 15px;
+  margin: 0 0 14px;
+}
+h3 span {
+  font-size: 9px;
+  background: #eaf0f5;
+  padding: 4px 7px;
+  border-radius: 9px;
+  margin-inline-start: 4px;
+}
+article {
+  display: flex;
+  gap: 11px;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf1f4;
+}
+article:last-child {
+  border: 0;
+}
+article > span {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #fff4df;
+  color: #a56a16;
+  flex: none;
+}
+strong,
+code {
+  display: block;
+}
+strong {
+  font-size: 11px;
+}
+code {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,16 @@
+<section class="detail-card">
+  <h3>
+    {{ language.t('database') }} <span>{{ items().length }}</span>
+  </h3>
+  @for (item of items(); track item.table) {
+    <article>
+      <span>▱</span>
+      <div>
+        <strong>{{ item.table }}</strong>
+        @if (item.entity) {
+          <p>{{ language.t('entity') }} · {{ item.entity }}</p>
+        }
+      </div>
+    </article>
+  }
+</section>

@@ -1,0 +1,47 @@
+<section class="sources">
+  <div class="source-head">
+    <div>
+      <h3>{{ language.t('sourceEvidence') }}</h3>
+      <p>{{ language.t('sourceSubtitle') }}</p>
+    </div>
+    <span>{{ sources().length }} {{ language.t('files') }}</span>
+  </div>
+  <div class="source-grid">
+    @for (source of sources(); track $index) {
+      <button type="button" (click)="open(source)">
+        <span class="file-icon">&lt;/&gt;</span
+        ><span class="file-copy"
+          ><strong>{{ source.fileName }}</strong
+          ><small [title]="source.repositoryName + '/' + source.filePath"
+            >{{ source.repositoryName }} · {{ source.filePath }}</small
+          ><em
+            >{{ language.t('lines') }} {{ source.startLine }}–{{ source.endLine }}
+            @if (source.symbol) {
+              · {{ source.symbol }}
+            }
+          </em></span
+        ><b>{{ language.t('viewCode') }} {{ language.isArabic() ? '←' : '→' }}</b>
+      </button>
+    }
+  </div>
+</section>
+@if (selected) {
+  <div class="modal-backdrop" (click)="close()">
+    <section class="code-modal" dir="ltr" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <strong>{{ selected.fileName }}</strong
+          ><small>{{ selected.repositoryName }} / {{ selected.filePath }}</small>
+        </div>
+        <button type="button" [attr.aria-label]="language.t('close')" (click)="close()">×</button>
+      </header>
+      @if (loading) {
+        <div class="code-loading">{{ language.t('loadingLines') }}</div>
+      } @else if (error) {
+        <div class="code-error">{{ error }}</div>
+      } @else if (content) {
+        <pre>@for(line of content.lines;track line.number){<code [class.highlight]="line.highlighted"><span>{{line.number}}</span>{{line.content}}</code>}</pre>
+      }
+    </section>
+  </div>
+}
