@@ -3,6 +3,19 @@
     <span>{{ language.t('projectsLabel') }}</span
     ><small>{{ language.count('projects', projects().length) }}</small>
   </div>
+  <button
+    type="button"
+    class="refresh-projects"
+    [disabled]="refreshing() || refreshDisabled()"
+    [attr.aria-busy]="refreshing()"
+    (click)="refreshRequested.emit()"
+  >
+    <span aria-hidden="true">↻</span>
+    {{ language.t(refreshing() ? 'loadingProjects' : 'refreshProjects') }}
+  </button>
+  @if (refreshError()) {
+    <p class="refresh-error" role="alert">{{ refreshError() }}</p>
+  }
   <div class="project-search">
     <span aria-hidden="true">⌕</span
     ><input

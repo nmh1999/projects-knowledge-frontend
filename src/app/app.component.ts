@@ -37,6 +37,7 @@ export class AppComponent implements OnInit {
   readonly questionHistory = inject(QuestionHistoryService);
   readonly language = inject(LanguageService);
   readonly projectsLoading = signal(false);
+  readonly projectsRefreshError = signal('');
   readonly projects = signal<DtoProject[]>([]);
   readonly selectedId = signal('');
   readonly selectedProject = signal<DtoProject | null>(null);
@@ -63,24 +64,30 @@ export class AppComponent implements OnInit {
   toggleMenu(): void {
     this.menuOpen.update((value) => !value);
   }
-  loadProjects(): void {
+  loadProjects(refresh = false): void {
     if (this.projectsLoading()) return;
+    if (refresh && (this.loading() || this.overviewLoading() || this.overviewRefreshing())) return;
     this.projectsLoading.set(true);
-    this.error.set('');
-    this.projectService
-      .getProjects()
-      .pipe(finalize(() => this.projectsLoading.set(false)))
-      .subscribe({
-        next: (projects) => {
-          this.projects.set(projects);
-          this.clearSelection();
-        },
-        error: (response) => {
-          this.projects.set([]);
-          this.clearSelection();
-          this.error.set(response.error?.message || this.language.t('connectError'));
+    this.projectsRefreshError.set('');
+    if (!refresh) this.error.set('');
+    const request = refresh ? this.projectService.refreshProjects() : this.projectService.getProjects();
+    request.pipe(finalize(() => this.projectsLoading.set(false))).subscribe({
+      next: (projects) => {
+        if (!refresh || !this.selectedId()) this.error.set('');
+        this.projects.set(projects);
+        // A catalog refresh must not discard the current answer or trigger a new overview analysis.
+        if (!refresh || !projects.some((project) => project.id === this.selectedId())) this.clearSelection();
+      },
+      error: (response) => {
+        if (refresh && this.projects().length) {
+          this.projectsRefreshError.set(response.error?.message || this.language.t('connectError'));
+          return;
         }
-      });
+        this.projects.set([]);
+        this.clearSelection();
+        this.error.set(response.error?.message || this.language.t('connectError'));
+      }
+    });
   }
   private clearSelection(): void {
     this.loading.set(false);

@@ -5,6 +5,10 @@
     [projects]="projects()"
     [selectedId]="selectedId()"
     [open]="menuOpen()"
+    [refreshing]="projectsLoading()"
+    [refreshDisabled]="loading() || overviewLoading() || overviewRefreshing()"
+    [refreshError]="projectsRefreshError()"
+    (refreshRequested)="loadProjects(true)"
     (selected)="selectProject($event)"
   />
   @if (menuOpen()) {
@@ -15,7 +19,7 @@
     ></button>
   }
   <main>
-    @if (projectsLoading()) {
+    @if (projectsLoading() && !projects().length) {
       <section class="fatal" role="status">
         <p>{{ language.t('loadingProjects') }}</p>
       </section>
@@ -24,13 +28,13 @@
         <span>!</span>
         <h2>{{ language.t('unableConnect') }}</h2>
         <p>{{ error() }}</p>
-        <button type="button" (click)="loadProjects()">{{ language.t('tryAgain') }}</button>
+        <button type="button" (click)="loadProjects(true)">{{ language.t('tryAgain') }}</button>
       </section>
     } @else if (!projects().length) {
       <section class="fatal" role="status">
         <h2>{{ language.t('noCodexProjects') }}</h2>
         <p>{{ language.t('noCodexProjectsHint') }}</p>
-        <button type="button" (click)="loadProjects()">{{ language.t('refreshProjects') }}</button>
+        <button type="button" (click)="loadProjects(true)">{{ language.t('refreshProjects') }}</button>
       </section>
     } @else if (!selectedId()) {
       <section class="project-prompt" role="status">

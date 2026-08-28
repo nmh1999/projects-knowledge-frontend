@@ -26,4 +26,11 @@ describe('ProjectService HTTP contract', () => {
     expect(refresh.request.method).toBe('POST');
     refresh.flush({});
   });
+
+  it('bypasses the catalog cache only on an explicit refresh', () => {
+    TestBed.inject(ProjectService).refreshProjects().subscribe();
+    const request = TestBed.inject(HttpTestingController).expectOne('/api/projects/refresh');
+    expect(request.request.method).toBe('POST');
+    request.flush([]);
+  });
 });

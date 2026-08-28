@@ -161,6 +161,87 @@ describe('AppComponent', () => {
     http.verify();
   });
 
+  it('refreshes from the sidebar without losing the selected project or answer and prevents duplicate refreshes', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/projects').flush([snapshot]);
+    app.selectProject('sample');
+    http.expectOne('/api/projects/sample').flush(snapshot);
+    app.answer.set(response);
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.refresh-projects').click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.refresh-projects').disabled).toBeTrue();
+    expect(fixture.nativeElement.querySelector('app-answer')).not.toBeNull();
+    app.loadProjects(true);
+    const refresh = http.expectOne('/api/projects/refresh');
+    expect(refresh.request.method).toBe('POST');
+    refresh.flush([snapshot, {...snapshot, id: 'new', name: 'New project'}]);
+    expect(app.selectedProject()).toEqual(snapshot);
+    expect(app.selectedId()).toBe('sample');
+    expect(app.answer()).toBe(response);
+    expect(app.projects().length).toBe(2);
+    http.expectNone('/api/projects/sample');
+    http.verify();
+  });
+
+  it('keeps the last list and answer after a failed refresh and clears removed selections on retry', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/projects').flush([snapshot]);
+    app.selectProject('sample');
+    http.expectOne('/api/projects/sample').flush(snapshot);
+    app.answer.set(response);
+    app.loadProjects(true);
+    http.expectOne('/api/projects/refresh').flush({message: 'Offline'}, {status: 503, statusText: 'Unavailable'});
+    fixture.detectChanges();
+    expect(app.projects()).toEqual([snapshot]);
+    expect(app.answer()).toBe(response);
+    expect(app.selectedId()).toBe('sample');
+    expect(fixture.nativeElement.querySelector('.refresh-error').textContent).toContain('Offline');
+    app.loadProjects(true);
+    http.expectOne('/api/projects/refresh').flush([]);
+    expect(app.selectedId()).toBe('');
+    expect(app.answer()).toBeNull();
+    expect(app.projectsRefreshError()).toBe('');
+    http.verify();
+  });
+
+  it('refreshes an empty cached catalog without automatically selecting or analyzing a project', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/projects').flush([]);
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.fatal button').click();
+    http.expectOne('/api/projects/refresh').flush([snapshot]);
+    expect(app.projects()).toEqual([snapshot]);
+    expect(app.selectedId()).toBe('');
+    http.verify();
+  });
+
+  it('does not refresh the catalog while an answer or overview is in flight', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/projects').flush([snapshot]);
+    for (const busy of [app.loading, app.overviewLoading, app.overviewRefreshing]) {
+      busy.set(true);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.refresh-projects').disabled).toBeTrue();
+      app.loadProjects(true);
+      http.expectNone('/api/projects/refresh');
+      busy.set(false);
+    }
+    http.verify();
+  });
+
   it('ignores an old answer and its loading completion after selecting another project', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const http = TestBed.inject(HttpTestingController);
@@ -322,7 +403,9 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.textContent).toContain(labels.t('noCodexProjects'));
     expect(fixture.nativeElement.querySelector('app-question-input')).toBeNull();
     fixture.nativeElement.querySelector('.fatal button').click();
-    http.expectOne('/api/projects').flush({message: 'Codex unavailable'}, {status: 503, statusText: 'Unavailable'});
+    http
+      .expectOne('/api/projects/refresh')
+      .flush({message: 'Codex unavailable'}, {status: 503, statusText: 'Unavailable'});
     fixture.detectChanges();
     expect(app.projects()).toEqual([]);
     expect(fixture.nativeElement.textContent).toContain('Codex unavailable');

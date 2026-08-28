@@ -14,6 +14,10 @@ export class ProjectService {
     return this.httpClient.get<DtoProject[]>(this.controllerUrl);
   }
 
+  public refreshProjects(): Observable<DtoProject[]> {
+    return this.httpClient.post<DtoProject[]>(`${this.controllerUrl}/refresh`, {});
+  }
+
   public getProject(projectId: string): Observable<DtoProject> {
     return this.httpClient.get<DtoProject>(`${this.controllerUrl}/${projectId}`);
   }

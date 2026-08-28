@@ -55,6 +55,38 @@
   font-size: 11px;
 }
 
+.refresh-projects {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 4px 13px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: transparent;
+  color: #dceaf3;
+  font-size: 12px;
+  cursor: pointer;
+}
+.refresh-projects:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+.refresh-projects:focus-visible {
+  outline: 2px solid #65bee9;
+  outline-offset: 2px;
+}
+.refresh-projects:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.refresh-error {
+  margin: 0 4px 13px;
+  color: #ffb9b9;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
 .project-search {
   display: flex;
   align-items: center;

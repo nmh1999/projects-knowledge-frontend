@@ -14,6 +14,10 @@ export class SidebarComponent {
   readonly selectedId = input('');
   readonly open = input(false);
   readonly selected = output<string>();
+  readonly refreshing = input(false);
+  readonly refreshDisabled = input(false);
+  readonly refreshError = input('');
+  readonly refreshRequested = output<void>();
   readonly query = signal('');
   readonly filteredProjects = computed(() => {
     const query = this.query().trim().toLocaleLowerCase();
