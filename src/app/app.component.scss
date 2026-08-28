@@ -214,3 +214,27 @@ main {
   color: var(--muted);
   font-size: 12px;
 }
+.cancelled-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.cancelled-state p {
+  flex: 1;
+  margin: 0;
+}
+.cancelled-state button {
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}

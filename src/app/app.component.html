@@ -30,6 +30,11 @@
         <p>{{ error() }}</p>
         <button type="button" (click)="loadProjects(true)">{{ language.t('tryAgain') }}</button>
       </section>
+    } @else if (projectsCancelled() && !projects().length) {
+      <section class="fatal" role="status">
+        <h2>{{ language.t('requestCancelled') }}</h2>
+        <button type="button" (click)="loadProjects()">{{ language.t('tryAgain') }}</button>
+      </section>
     } @else if (!projects().length) {
       <section class="fatal" role="status">
         <h2>{{ language.t('noCodexProjects') }}</h2>
@@ -70,6 +75,18 @@
           </div>
         }
         <div id="results-region">
+          @if (answerCancelled()) {
+            <div class="cancelled-state" role="status">
+              <p>{{ language.t('requestCancelled') }}</p>
+              <button
+                type="button"
+                (click)="lastIntegration() ? openIntegration(lastIntegration()) : ask(lastQuestion(), lastSearchMode())"
+              >
+                {{ language.t('tryAgain') }}
+              </button>
+              <button type="button" (click)="showOverview()">{{ language.t('backToOverview') }}</button>
+            </div>
+          }
           @if (answer() && !loading()) {
             <div class="result-context">
               <button class="back-overview" type="button" [disabled]="answerBusy()" (click)="showOverview()">
@@ -120,9 +137,14 @@
             }
             <app-answer [answer]="answer()" />
           }
-          @if (!answer() && !loading()) {
+          @if (!answer() && !loading() && !answerCancelled()) {
             @if (overviewLoading()) {
               <p role="status">{{ language.t('loadingOverview') }}</p>
+            } @else if (overviewCancelled()) {
+              <div class="cancelled-state" role="status">
+                <p>{{ language.t('requestCancelled') }}</p>
+                <button type="button" (click)="selectProject(selectedId())">{{ language.t('tryAgain') }}</button>
+              </div>
             } @else if (overviewError()) {
               <div class="error-banner overview-error" role="alert">
                 <span>!</span>

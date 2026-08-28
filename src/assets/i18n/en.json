@@ -1,4 +1,9 @@
 {
+  "cancelRequest": "Cancel request",
+  "cancelRequests": "Cancel requests",
+  "requestCancelled": "Request cancelled",
+  "cancellationUnconfirmed": "Stopped waiting, but could not confirm cancellation on the backend.",
+  "dismissNotice": "Dismiss notification",
   "searchMode": "Answer format",
   "basicMode": "Basic",
   "advancedMode": "Advanced",

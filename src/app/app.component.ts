@@ -14,6 +14,7 @@ import {ReqIntegrationDetails} from '@shared/schema/request/knowledge/ReqIntegra
 import {SearchMode} from '@shared/enums/knowledge/SearchMode';
 import {LanguageService} from '@shared/service/language.service';
 import {QuestionHistoryService} from '@shared/service/question-history.service';
+import {RequestCancelledError} from '@shared/service/request-cancelled.error';
 import {finalize, Observable} from 'rxjs';
 import {HttpLoadingIndicatorComponent} from '@shared/component/general/http-loading-indicator/http-loading-indicator.component';
 
@@ -39,12 +40,14 @@ export class AppComponent implements OnInit {
   readonly questionHistory = inject(QuestionHistoryService);
   readonly language = inject(LanguageService);
   readonly projectsLoading = signal(false);
+  readonly projectsCancelled = signal(false);
   readonly projectsRefreshError = signal('');
   readonly projects = signal<DtoProject[]>([]);
   readonly selectedId = signal('');
   readonly selectedProject = signal<DtoProject | null>(null);
   readonly answer = signal<DtoKnowledgeAnswer | null>(null);
   readonly loading = signal(false);
+  readonly answerCancelled = signal(false);
   readonly answerRefreshing = signal(false);
   readonly answerRefreshError = signal('');
   readonly answerBusy = computed(() => this.loading() || this.answerRefreshing());
@@ -61,6 +64,7 @@ export class AppComponent implements OnInit {
   readonly lastQuestion = signal('');
   readonly lastIntegration = signal('');
   readonly overviewLoading = signal(false);
+  readonly overviewCancelled = signal(false);
   readonly overviewError = signal('');
   readonly overviewRefreshing = signal(false);
   readonly overviewRefreshError = signal('');
@@ -79,6 +83,7 @@ export class AppComponent implements OnInit {
     if (this.projectsLoading()) return;
     if (refresh && (this.answerBusy() || this.overviewLoading() || this.overviewRefreshing())) return;
     this.projectsLoading.set(true);
+    this.projectsCancelled.set(false);
     this.projectsRefreshError.set('');
     if (!refresh) this.error.set('');
     const request = refresh ? this.projectService.refreshProjects() : this.projectService.getProjects();
@@ -90,6 +95,10 @@ export class AppComponent implements OnInit {
         if (!refresh || !projects.some((project) => project.id === this.selectedId())) this.clearSelection();
       },
       error: (response) => {
+        if (response instanceof RequestCancelledError) {
+          this.projectsCancelled.set(!this.projects().length);
+          return;
+        }
         if (refresh && this.projects().length) {
           this.projectsRefreshError.set(response.error?.message || this.language.t('connectError'));
           return;
@@ -106,6 +115,7 @@ export class AppComponent implements OnInit {
     this.selectionVersion++;
     this.overviewLoading.set(false);
     this.overviewError.set('');
+    this.overviewCancelled.set(false);
     this.overviewRefreshing.set(false);
     this.overviewRefreshError.set('');
     this.selectedId.set('');
@@ -125,6 +135,7 @@ export class AppComponent implements OnInit {
     this.lastQuestion.set('');
     this.menuOpen.set(false);
     this.overviewLoading.set(true);
+    this.overviewCancelled.set(false);
     this.overviewError.set('');
     this.overviewRefreshing.set(false);
     this.overviewRefreshError.set('');
@@ -139,7 +150,8 @@ export class AppComponent implements OnInit {
       },
       error: (response) => {
         if (version === this.selectionVersion) {
-          this.overviewError.set(response.error?.message || this.language.t('overviewError'));
+          if (response instanceof RequestCancelledError) this.overviewCancelled.set(true);
+          else this.overviewError.set(response.error?.message || this.language.t('overviewError'));
           this.overviewLoading.set(false);
         }
       }
@@ -167,7 +179,8 @@ export class AppComponent implements OnInit {
       },
       error: (response) => {
         if (version === this.selectionVersion) {
-          this.overviewRefreshError.set(response.error?.message || this.language.t('overviewError'));
+          if (!(response instanceof RequestCancelledError))
+            this.overviewRefreshError.set(response.error?.message || this.language.t('overviewError'));
           this.overviewRefreshing.set(false);
         }
       }
@@ -223,6 +236,7 @@ export class AppComponent implements OnInit {
     this.requestAnswer(request, true);
   }
   private resetAnswerRefresh(): void {
+    this.answerCancelled.set(false);
     this.answerRequest = null;
     this.answerRefreshing.set(false);
     this.answerRefreshError.set('');
@@ -245,6 +259,7 @@ export class AppComponent implements OnInit {
     const version = this.selectionVersion;
     const busy = refresh ? this.answerRefreshing : this.loading;
     busy.set(true);
+    this.answerCancelled.set(false);
     this.error.set('');
     this.answerRefreshError.set('');
     if (!refresh) {
@@ -265,6 +280,10 @@ export class AppComponent implements OnInit {
           if (version === this.selectionVersion) this.answer.set(answer);
         },
         error: (response) => {
+          if (response instanceof RequestCancelledError) {
+            if (version === this.selectionVersion && !refresh) this.answerCancelled.set(true);
+            return;
+          }
           if (version === this.selectionVersion)
             (refresh ? this.answerRefreshError : this.error).set(
               response.error?.message || this.language.t('analysisError')

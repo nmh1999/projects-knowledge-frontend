@@ -23,6 +23,63 @@
 .spinner span:last-child {
   animation-delay: -1s;
 }
+.cancel-request {
+  position: absolute;
+  top: calc(50% + 52px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border: 1px solid #3c6481;
+  border-radius: 12px;
+  background: #0b2945;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 18px #071b3026;
+}
+.cancel-request:hover {
+  background: #153c5c;
+}
+button:focus-visible {
+  outline: 3px solid #58b0dd;
+  outline-offset: 4px;
+}
+.request-notice {
+  position: fixed;
+  z-index: 9999998;
+  inset-inline-end: 24px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: min(520px, calc(100vw - 48px));
+  padding: 14px 18px;
+  border: 1px solid #3c6481;
+  border-radius: 12px;
+  background: #0b2945;
+  color: #fff;
+  box-shadow: 0 6px 24px #071b3040;
+  line-height: 1.6;
+}
+.request-notice button {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: #ffffff14;
+  color: inherit;
+  font-size: 24px;
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner span {
+    animation: none;
+    transform: scale(0.7);
+  }
+}
 strong {
   position: absolute;
   width: 1px;

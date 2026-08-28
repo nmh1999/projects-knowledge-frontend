@@ -1,4 +1,9 @@
 {
+  "cancelRequest": "إلغاء الطلب",
+  "cancelRequests": "إلغاء الطلبات",
+  "requestCancelled": "تم إلغاء الطلب",
+  "cancellationUnconfirmed": "تم إيقاف الانتظار، لكن تعذّر تأكيد إيقاف المعالجة في الباك إند.",
+  "dismissNotice": "إغلاق التنبيه",
   "searchMode": "نوع الإجابة",
   "basicMode": "مختصر",
   "advancedMode": "متقدم",

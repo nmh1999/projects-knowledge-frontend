@@ -2,5 +2,16 @@
   <div class="http-loading" role="status" aria-live="polite">
     <div class="spinner" aria-hidden="true"><span></span><span></span></div>
     <strong>{{ language.t('loading') }}</strong>
+    @if (loading.pendingCount()) {
+      <button type="button" class="cancel-request" (click)="loading.cancelAll()">
+        {{ language.t(loading.pendingCount() > 1 ? 'cancelRequests' : 'cancelRequest') }}
+      </button>
+    }
+  </div>
+}
+@if (loading.notice()) {
+  <div class="request-notice" role="status" aria-live="polite">
+    <span>{{ language.t(loading.notice()) }}</span>
+    <button type="button" (click)="loading.dismissNotice()" [attr.aria-label]="language.t('dismissNotice')">×</button>
   </div>
 }
