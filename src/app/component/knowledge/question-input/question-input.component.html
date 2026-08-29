@@ -29,7 +29,7 @@
       <textarea
         #questionField
         id="project-question"
-        dir="auto"
+        [attr.dir]="questionDirection()"
         [formControl]="question"
         rows="3"
         [placeholder]="language.t('questionPlaceholder')"

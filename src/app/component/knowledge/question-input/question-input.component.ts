@@ -49,6 +49,11 @@ export class QuestionInputComponent {
     if (value !== this.question.value) this.question.setValue(value);
     return value;
   }
+  /** Empty placeholders follow the interface; entered text keeps automatic bidirectional detection. */
+  questionDirection(): 'auto' | 'ltr' | 'rtl' {
+    if (this.question.value) return 'auto';
+    return this.language.isArabic() ? 'rtl' : 'ltr';
+  }
   handleEnter(event: Event): void {
     const key = event as KeyboardEvent;
     if (!key.shiftKey && !key.isComposing && !key.repeat) this.submit(event);

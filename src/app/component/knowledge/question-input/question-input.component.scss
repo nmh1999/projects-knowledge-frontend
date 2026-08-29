@@ -49,7 +49,8 @@ form {
   display: block;
   width: 100%;
   min-height: 104px;
-  padding: 14px 46px;
+  padding-block: 14px;
+  padding-inline: 14px 46px;
   resize: vertical;
   border: 1px solid #7796aa;
   border-radius: 10px;
@@ -60,6 +61,15 @@ form {
   font-size: 14px;
   line-height: 1.7;
   transition: box-shadow 0.15s;
+}
+/* Match the reserved space to the clear button's UI side, even when the typed text uses another direction. */
+:host-context([dir='ltr']) .question-field textarea {
+  padding-right: 46px;
+  padding-left: 14px;
+}
+:host-context([dir='rtl']) .question-field textarea {
+  padding-right: 14px;
+  padding-left: 46px;
 }
 .question-field textarea::placeholder {
   color: var(--muted);

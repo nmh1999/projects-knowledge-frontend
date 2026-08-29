@@ -191,6 +191,24 @@ describe('Question search modes', () => {
     expect(asked).toHaveBeenCalledOnceWith('Which framework?');
   });
 
+  it('starts question text naturally and keeps space beside the clear button for mixed-direction text', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const textarea = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+    host.dir = 'ltr';
+    fixture.componentInstance.question.setValue('سؤال عربي');
+    fixture.detectChanges();
+    let style = getComputedStyle(textarea);
+    expect(style.paddingLeft).toBe('14px');
+    expect(style.paddingRight).toBe('46px');
+
+    host.dir = 'rtl';
+    fixture.componentInstance.question.setValue('English question');
+    fixture.detectChanges();
+    style = getComputedStyle(textarea);
+    expect(style.paddingRight).toBe('14px');
+    expect(style.paddingLeft).toBe('46px');
+  });
+
   it('localizes each mode and includes the selected project in the restored heading', () => {
     fixture.componentRef.setInput('projectName', 'Example API');
     for (const language of ['ar', 'en'] as const) {
@@ -209,8 +227,11 @@ describe('Question search modes', () => {
       expect(host.querySelector('.search-modes small')).toBeNull();
       expect(host.querySelector('.mode-hint')?.textContent).toBe(fixture.componentInstance.language.t('basicHint'));
       expect(host.querySelector('textarea')?.hasAttribute('maxlength')).toBeFalse();
-      expect(host.querySelector('textarea')?.getAttribute('dir')).toBe('auto');
+      expect(host.querySelector('textarea')?.getAttribute('dir')).toBe(language === 'ar' ? 'rtl' : 'ltr');
     }
+    fixture.componentInstance.question.setValue('Mixed direction text');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('textarea').getAttribute('dir')).toBe('auto');
   });
 
   it('does not submit whitespace, composing text or a held Enter key', () => {
