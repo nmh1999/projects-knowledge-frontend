@@ -13,4 +13,9 @@ export class DesktopService {
     const headers = new HttpHeaders({'X-Projects-Knowledge-Desktop': 'true'});
     return this.httpClient.post<void>(`${this.controllerUrl}/shutdown`, null, {headers});
   }
+
+  clearCache(): Observable<void> {
+    const headers = new HttpHeaders({'X-Projects-Knowledge-Desktop': 'true'});
+    return this.httpClient.delete<void>(`${this.controllerUrl}/cache`, {headers});
+  }
 }

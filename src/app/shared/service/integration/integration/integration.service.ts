@@ -6,7 +6,7 @@ import {Language} from '@shared/enums/Language';
 import {ReqIntegrationDetails} from '@shared/schema/request/knowledge/ReqIntegrationDetails';
 import {DtoKnowledgeAnswer} from '@shared/schema/response/knowledge/DtoKnowledgeAnswer';
 
-/** Integration details reuse the backend's five-hour cache. */
+/** Integration details reuse the backend's configured persistent cache. */
 @Injectable({providedIn: 'root'})
 export class IntegrationService {
   private readonly httpClient = inject(HttpClient);

@@ -24,6 +24,36 @@ export class HeaderComponent {
   readonly shuttingDown = signal(false);
   readonly shutdownComplete = signal(false);
   readonly shutdownError = signal(false);
+  readonly cacheDialogOpen = signal(false);
+  readonly clearingCache = signal(false);
+  readonly cacheClearComplete = signal(false);
+  readonly cacheClearError = signal(false);
+
+  openCacheDialog(): void {
+    this.cacheClearComplete.set(false);
+    this.cacheClearError.set(false);
+    this.cacheDialogOpen.set(true);
+  }
+
+  closeCacheDialog(): void {
+    if (!this.clearingCache()) this.cacheDialogOpen.set(false);
+  }
+
+  clearCache(): void {
+    if (this.clearingCache()) return;
+    this.clearingCache.set(true);
+    this.cacheClearError.set(false);
+    this.desktop.clearCache().subscribe({
+      next: () => {
+        this.clearingCache.set(false);
+        this.cacheClearComplete.set(true);
+      },
+      error: () => {
+        this.clearingCache.set(false);
+        this.cacheClearError.set(true);
+      }
+    });
+  }
 
   openShutdownDialog(): void {
     this.shutdownError.set(false);
@@ -55,6 +85,7 @@ export class HeaderComponent {
   @HostListener('document:keydown.escape')
   closeShutdownDialogFromKeyboard(): void {
     this.closeShutdownDialog();
+    this.closeCacheDialog();
   }
 
   private markShutdownComplete(): void {

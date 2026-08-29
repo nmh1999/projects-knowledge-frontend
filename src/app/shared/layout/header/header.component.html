@@ -18,13 +18,22 @@
   <div class="header-actions">
     @if (desktopEnabled()) {
       <button
+        class="language-button cache-button"
+        type="button"
+        (click)="openCacheDialog()"
+        [attr.aria-label]="language.t('clearAllCache')"
+        [title]="language.t('clearAllCache')"
+      >
+        <span aria-hidden="true">↻</span><span class="desktop-action-label">{{ language.t('clearAllCache') }}</span>
+      </button>
+      <button
         class="language-button shutdown-button"
         type="button"
         (click)="openShutdownDialog()"
         [attr.aria-label]="language.t('closeApplication')"
         [title]="language.t('closeApplication')"
       >
-        <span aria-hidden="true">⏻</span><span class="shutdown-label">{{ language.t('closeApplication') }}</span>
+        <span aria-hidden="true">⏻</span><span class="desktop-action-label">{{ language.t('closeApplication') }}</span>
       </button>
     }
     <button class="language-button" type="button" (click)="language.toggle()">{{ language.t('switchLanguage') }}</button
@@ -39,6 +48,42 @@
     </button>
   </div>
 </header>
+@if (cacheDialogOpen()) {
+  <div class="shutdown-backdrop" (click)="closeCacheDialog()">
+    <section
+      class="shutdown-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cache-title"
+      aria-describedby="cache-description"
+      (click)="$event.stopPropagation()"
+    >
+      @if (cacheClearComplete()) {
+        <span class="shutdown-icon complete" aria-hidden="true">✓</span>
+        <h2 id="cache-title">{{ language.t('cacheCleared') }}</h2>
+        <p id="cache-description">{{ language.t('cacheClearedHint') }}</p>
+        <div class="shutdown-actions">
+          <button type="button" (click)="closeCacheDialog()">{{ language.t('close') }}</button>
+        </div>
+      } @else {
+        <span class="shutdown-icon cache-icon" aria-hidden="true">↻</span>
+        <h2 id="cache-title">{{ language.t('clearCacheTitle') }}</h2>
+        <p id="cache-description">{{ language.t('clearCacheMessage') }}</p>
+        @if (cacheClearError()) {
+          <p class="shutdown-error" role="alert">{{ language.t('clearCacheFailed') }}</p>
+        }
+        <div class="shutdown-actions">
+          <button type="button" [disabled]="clearingCache()" (click)="closeCacheDialog()">
+            {{ language.t('cancel') }}
+          </button>
+          <button class="confirm-cache" type="button" [disabled]="clearingCache()" (click)="clearCache()">
+            {{ language.t(clearingCache() ? 'clearingCache' : 'clearAllCache') }}
+          </button>
+        </div>
+      }
+    </section>
+  </div>
+}
 @if (shutdownDialogOpen()) {
   <div class="shutdown-backdrop" (click)="closeShutdownDialog()">
     <section

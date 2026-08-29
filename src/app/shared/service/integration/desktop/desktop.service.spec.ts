@@ -14,4 +14,12 @@ describe('DesktopService HTTP contract', () => {
     expect(request.request.headers.get('X-Projects-Knowledge-Desktop')).toBe('true');
     request.flush(null, {status: 202, statusText: 'Accepted'});
   });
+
+  it('uses a protected DELETE to clear every backend cache', () => {
+    TestBed.inject(DesktopService).clearCache().subscribe();
+    const request = TestBed.inject(HttpTestingController).expectOne('/api/desktop/cache');
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.headers.get('X-Projects-Knowledge-Desktop')).toBe('true');
+    request.flush(null, {status: 204, statusText: 'No Content'});
+  });
 });

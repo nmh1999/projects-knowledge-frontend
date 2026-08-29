@@ -117,6 +117,21 @@
   gap: 6px;
   color: #9a3946;
 }
+.cache-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--blue);
+}
+.cache-button span[aria-hidden='true'] {
+  font-size: 16px;
+  line-height: 1;
+}
+.cache-button:hover {
+  border-color: #8dbbd7;
+  color: var(--navy);
+  background: #f2f9fd;
+}
 .shutdown-button span[aria-hidden='true'] {
   font-size: 14px;
   line-height: 1;
@@ -162,6 +177,10 @@
   color: #08784f;
   background: #e8f8f1;
 }
+.shutdown-icon.cache-icon {
+  color: var(--blue);
+  background: #eaf6fc;
+}
 .shutdown-dialog h2 {
   margin: 0 0 9px;
   font-size: 20px;
@@ -199,6 +218,11 @@
   color: #fff;
   background: #a13a47;
 }
+.shutdown-actions .confirm-cache {
+  border-color: var(--blue);
+  color: #fff;
+  background: var(--blue);
+}
 .shutdown-actions button:disabled {
   opacity: 0.6;
   cursor: wait;
@@ -211,10 +235,11 @@
     min-width: 32px;
     padding-inline: 8px;
   }
-  .shutdown-label {
+  .desktop-action-label {
     display: none;
   }
-  .shutdown-button {
+  .shutdown-button,
+  .cache-button {
     min-width: 32px;
     justify-content: center;
     padding-inline: 8px;

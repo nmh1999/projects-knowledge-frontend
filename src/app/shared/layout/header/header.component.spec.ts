@@ -35,4 +35,22 @@ describe('HeaderComponent desktop shutdown', () => {
     );
     expect(fixture.nativeElement.querySelector('.shutdown-actions')).toBeNull();
   });
+
+  it('confirms clearing every cache and reports completion', () => {
+    const fixture = TestBed.createComponent(HeaderComponent);
+    const component = fixture.componentInstance;
+    const labels = TestBed.inject(LanguageService);
+    component.desktopEnabled.set(true);
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('.cache-button').click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#cache-title').textContent).toContain(labels.t('clearCacheTitle'));
+
+    fixture.nativeElement.querySelector('.confirm-cache').click();
+    const request = TestBed.inject(HttpTestingController).expectOne('/api/desktop/cache');
+    request.flush(null, {status: 204, statusText: 'No Content'});
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#cache-title').textContent).toContain(labels.t('cacheCleared'));
+  });
 });
