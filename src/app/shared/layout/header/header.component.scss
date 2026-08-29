@@ -111,12 +111,112 @@
   padding-inline: 10px;
   font-size: 15px;
 }
+.shutdown-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #9a3946;
+}
+.shutdown-button span[aria-hidden='true'] {
+  font-size: 14px;
+  line-height: 1;
+}
+.shutdown-button:hover {
+  border-color: #dcaeb5;
+  color: #842f3a;
+  background: #fff7f8;
+}
+.shutdown-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(7, 21, 34, 0.62);
+  backdrop-filter: blur(4px);
+}
+.shutdown-dialog {
+  width: min(100%, 410px);
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 24px 70px rgba(4, 20, 32, 0.3);
+  text-align: center;
+}
+.shutdown-icon {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 16px;
+  place-items: center;
+  border-radius: 14px;
+  color: #a13a47;
+  background: #fff0f2;
+  font-size: 24px;
+  font-weight: 800;
+}
+.shutdown-icon.complete {
+  color: #08784f;
+  background: #e8f8f1;
+}
+.shutdown-dialog h2 {
+  margin: 0 0 9px;
+  font-size: 20px;
+}
+.shutdown-dialog p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.shutdown-dialog .shutdown-error {
+  margin-top: 13px;
+  color: #a13a47;
+}
+.shutdown-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 24px;
+}
+.shutdown-actions button {
+  min-height: 39px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.shutdown-actions .confirm-shutdown {
+  border-color: #a13a47;
+  color: #fff;
+  background: #a13a47;
+}
+.shutdown-actions button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
 @media (max-width: 760px) {
   .header-actions {
     gap: 5px;
   }
   .theme-button {
     min-width: 32px;
+    padding-inline: 8px;
+  }
+  .shutdown-label {
+    display: none;
+  }
+  .shutdown-button {
+    min-width: 32px;
+    justify-content: center;
     padding-inline: 8px;
   }
 }

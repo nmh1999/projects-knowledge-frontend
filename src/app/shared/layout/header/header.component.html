@@ -16,6 +16,17 @@
     >
   </div>
   <div class="header-actions">
+    @if (desktopEnabled()) {
+      <button
+        class="language-button shutdown-button"
+        type="button"
+        (click)="openShutdownDialog()"
+        [attr.aria-label]="language.t('closeApplication')"
+        [title]="language.t('closeApplication')"
+      >
+        <span aria-hidden="true">⏻</span><span class="shutdown-label">{{ language.t('closeApplication') }}</span>
+      </button>
+    }
     <button class="language-button" type="button" (click)="language.toggle()">{{ language.t('switchLanguage') }}</button
     ><button
       class="language-button theme-button"
@@ -28,3 +39,36 @@
     </button>
   </div>
 </header>
+@if (shutdownDialogOpen()) {
+  <div class="shutdown-backdrop" (click)="closeShutdownDialog()">
+    <section
+      class="shutdown-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="shutdown-title"
+      aria-describedby="shutdown-description"
+      (click)="$event.stopPropagation()"
+    >
+      @if (shutdownComplete()) {
+        <span class="shutdown-icon complete" aria-hidden="true">✓</span>
+        <h2 id="shutdown-title">{{ language.t('applicationClosed') }}</h2>
+        <p id="shutdown-description">{{ language.t('applicationClosedHint') }}</p>
+      } @else {
+        <span class="shutdown-icon" aria-hidden="true">⏻</span>
+        <h2 id="shutdown-title">{{ language.t('closeApplicationTitle') }}</h2>
+        <p id="shutdown-description">{{ language.t('closeApplicationMessage') }}</p>
+        @if (shutdownError()) {
+          <p class="shutdown-error" role="alert">{{ language.t('shutdownFailed') }}</p>
+        }
+        <div class="shutdown-actions">
+          <button type="button" [disabled]="shuttingDown()" (click)="closeShutdownDialog()">
+            {{ language.t('cancel') }}
+          </button>
+          <button class="confirm-shutdown" type="button" [disabled]="shuttingDown()" (click)="shutdown()">
+            {{ language.t(shuttingDown() ? 'closingApplication' : 'closeApplication') }}
+          </button>
+        </div>
+      }
+    </section>
+  </div>
+}
