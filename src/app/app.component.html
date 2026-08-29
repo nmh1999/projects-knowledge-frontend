@@ -145,7 +145,16 @@
           }
           @if (!answer() && !loading() && !answerCancelled()) {
             @if (overviewLoading()) {
-              <p role="status">{{ language.t('loadingOverview') }}</p>
+              <section class="overview-loading-state" role="status" aria-live="polite" aria-busy="true">
+                <span class="overview-loading-spinner" aria-hidden="true"></span>
+                <div>
+                  <strong>{{ language.t('loadingOverviewTitle') }}</strong>
+                  <p>
+                    <bdi dir="auto">{{ scopeName() }}</bdi> · {{ language.t('loadingOverview') }}
+                  </p>
+                </div>
+                <span class="overview-loading-progress" aria-hidden="true"></span>
+              </section>
             } @else if (overviewCancelled()) {
               <div class="cancelled-state" role="status">
                 <p><span class="cancelled-icon" aria-hidden="true"></span>{{ language.t('requestCancelled') }}</p>

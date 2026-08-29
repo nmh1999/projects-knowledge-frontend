@@ -89,7 +89,7 @@ describe('Cancellation UI', () => {
     );
   }
 
-  it('allows retry after cancelling the initial project list and overview', fakeAsync(() => {
+  it('keeps the project usable while its overview loads in the background', fakeAsync(() => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     const http = TestBed.inject(HttpTestingController);
@@ -104,17 +104,23 @@ describe('Cancellation UI', () => {
     expect(app.projectsLoading()).toBeFalse();
     fixture.nativeElement.querySelector('.fatal button').click();
     http.expectOne('/api/projects').flush([project]);
+    tick(450);
     app.selectProject('sample');
-    http.expectOne('/api/projects/sample');
-    loader.cancelAll();
-    http.expectOne((request) => request.url.endsWith('/cancel')).flush(null);
+    const overview = http.expectOne('/api/projects/sample');
     fixture.detectChanges();
-    expect(app.overviewCancelled()).toBeTrue();
-    expect(app.overviewLoading()).toBeFalse();
+    expect(app.overviewLoading()).toBeTrue();
     expect(app.overviewError()).toBe('');
-    fixture.nativeElement.querySelector('.cancelled-state button').click();
-    http.expectOne('/api/projects/sample').flush(project);
-    expect(app.overviewCancelled()).toBeFalse();
+    expect(loader.pendingCount()).toBe(0);
+    expect(fixture.nativeElement.querySelector('.http-loading')).toBeNull();
+    expect((fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement).disabled).toBeFalse();
+    app.ask(answer.question, 'basic');
+    const question = http.expectOne('/api/questions');
+    expect(question.request.body.projectId).toBe('sample');
+    expect(loader.pendingCount()).toBe(1);
+    question.flush(answer);
+    overview.flush(project);
+    expect(app.answer()).toEqual(answer);
+    expect(app.overviewLoading()).toBeFalse();
     tick(5000);
     http.verify();
   }));

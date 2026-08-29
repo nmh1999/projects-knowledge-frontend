@@ -1,10 +1,11 @@
-import {HttpClient, provideHttpClient, withInterceptors} from '@angular/common/http';
+import {HttpClient, HttpContext, provideHttpClient, withInterceptors} from '@angular/common/http';
 import {HttpTestingController, provideHttpClientTesting} from '@angular/common/http/testing';
 import {fakeAsync, TestBed, tick} from '@angular/core/testing';
 import {take} from 'rxjs';
 import {loadingInterceptor} from './loading.interceptor';
 import {HttpLoadingService} from '@shared/service/http-loading.service';
 import {RequestCancelledError} from '@shared/service/request-cancelled.error';
+import {BACKGROUND_REQUEST} from '@shared/interceptor/background-request.context';
 
 describe('HTTP cancellation', () => {
   let client: HttpClient;
@@ -91,6 +92,22 @@ describe('HTTP cancellation', () => {
     subscription.unsubscribe();
     expect(request.cancelled).toBeTrue();
     http.expectOne((request) => request.url.endsWith('/cancel')).flush(null);
+    expect(loading.notice()).toBe('');
+    tick(450);
+  }));
+
+  it('keeps background requests out of the full-screen loader and still cancels disposed backend work', fakeAsync(() => {
+    const subscription = client
+      .get('/api/projects/sample', {context: new HttpContext().set(BACKGROUND_REQUEST, true)})
+      .subscribe();
+    const request = http.expectOne('/api/projects/sample');
+    const requestId = request.request.headers.get('X-Request-ID');
+    expect(requestId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(loading.pendingCount()).toBe(0);
+    expect(loading.active()).toBeFalse();
+    subscription.unsubscribe();
+    expect(request.cancelled).toBeTrue();
+    http.expectOne((candidate) => candidate.url.endsWith('/requests/' + requestId + '/cancel')).flush(null);
     expect(loading.notice()).toBe('');
     tick(450);
   }));

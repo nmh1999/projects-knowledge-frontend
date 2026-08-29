@@ -112,6 +112,7 @@
   "refreshingOverview": "Updating…",
   "refreshOverviewHint": "Run a new Codex analysis and renew the 24-hour overview cache.",
   "overviewRefreshFailed": "Update failed. The previous overview and its update time are still shown.",
+  "loadingOverviewTitle": "Loading project information",
   "loadingOverview": "Analyzing the project overview and integrations. Repeat visits use the 24-hour cache.",
   "overviewError": "Could not analyze the project overview. Please try again.",
   "detectedModules": "Main features",

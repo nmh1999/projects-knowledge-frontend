@@ -671,6 +671,10 @@ describe('AppComponent', () => {
     app.selectProject(project.id);
     expect(app.overviewLoading()).toBeTrue();
     fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.overview-loading-state')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.overview-loading-spinner')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain(labels.t('loadingOverviewTitle'));
+    expect(fixture.nativeElement.textContent).toContain(project.name);
     expect(fixture.nativeElement.textContent).toContain(labels.t('loadingOverview'));
     http
       .expectOne('/api/projects/project')
@@ -693,7 +697,7 @@ describe('AppComponent', () => {
     http.verify();
   });
 
-  it('ignores late overview results and errors when switching projects, including all projects', () => {
+  it('lets previous overview requests finish without applying their results to the new project', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     const http = TestBed.inject(HttpTestingController);
@@ -724,6 +728,30 @@ describe('AppComponent', () => {
     expect(app.selectedProject()?.id).toBe('all');
     expect(app.overviewError()).toBe('');
     expect(app.overviewLoading()).toBeFalse();
+    http.verify();
+  });
+
+  it('reuses the unfinished overview request when returning to a project', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    const http = TestBed.inject(HttpTestingController);
+    const first = {...snapshot, id: 'first', name: 'First'};
+    const second = {...snapshot, id: 'second', name: 'Second'};
+    fixture.detectChanges();
+    http.expectOne('/api/projects').flush([first, second]);
+
+    app.selectProject('first');
+    const firstOverview = http.expectOne('/api/projects/first');
+    app.selectProject('second');
+    const secondOverview = http.expectOne('/api/projects/second');
+    app.selectProject('first');
+    http.expectNone('/api/projects/first');
+
+    firstOverview.flush(first);
+    expect(app.selectedProject()?.id).toBe('first');
+    expect(app.overviewLoading()).toBeFalse();
+    secondOverview.flush(second);
+    expect(app.selectedProject()?.id).toBe('first');
     http.verify();
   });
 
