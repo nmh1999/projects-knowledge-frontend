@@ -1,4 +1,3 @@
-import {DOCUMENT} from '@angular/common';
 import {Component, HostListener, inject, input, output, signal} from '@angular/core';
 import {LanguageService} from '@shared/service/language.service';
 import {ThemeService} from '@shared/service/theme.service';
@@ -11,15 +10,11 @@ import {DesktopService} from '@shared/service/integration/desktop/desktop.servic
   styleUrl: './header.component.scss'
 })
 export class HeaderComponent {
-  private readonly document = inject(DOCUMENT);
   private readonly desktop = inject(DesktopService);
   readonly language = inject(LanguageService);
   readonly theme = inject(ThemeService);
   readonly menuOpen = input(false);
   readonly menuToggle = output<void>();
-  readonly desktopEnabled = signal(
-    new URLSearchParams(this.document.defaultView?.location.search ?? '').get('desktop') === 'true'
-  );
   readonly shutdownDialogOpen = signal(false);
   readonly shuttingDown = signal(false);
   readonly shutdownComplete = signal(false);

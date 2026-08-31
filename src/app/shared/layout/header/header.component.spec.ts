@@ -15,9 +15,7 @@ describe('HeaderComponent desktop shutdown', () => {
 
   it('confirms shutdown and explains that the browser tab can be closed', () => {
     const fixture = TestBed.createComponent(HeaderComponent);
-    const component = fixture.componentInstance;
     const labels = TestBed.inject(LanguageService);
-    component.desktopEnabled.set(true);
     fixture.detectChanges();
 
     fixture.nativeElement.querySelector('.shutdown-button').click();
@@ -38,9 +36,7 @@ describe('HeaderComponent desktop shutdown', () => {
 
   it('confirms clearing every cache and reports completion', () => {
     const fixture = TestBed.createComponent(HeaderComponent);
-    const component = fixture.componentInstance;
     const labels = TestBed.inject(LanguageService);
-    component.desktopEnabled.set(true);
     fixture.detectChanges();
 
     fixture.nativeElement.querySelector('.cache-button').click();
@@ -52,5 +48,13 @@ describe('HeaderComponent desktop shutdown', () => {
     request.flush(null, {status: 204, statusText: 'No Content'});
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('#cache-title').textContent).toContain(labels.t('cacheCleared'));
+  });
+
+  it('always shows cache and shutdown controls without a desktop query parameter', () => {
+    const fixture = TestBed.createComponent(HeaderComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.cache-button')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.shutdown-button')).not.toBeNull();
   });
 });

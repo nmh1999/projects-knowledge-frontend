@@ -16,26 +16,24 @@
     >
   </div>
   <div class="header-actions">
-    @if (desktopEnabled()) {
-      <button
-        class="language-button cache-button"
-        type="button"
-        (click)="openCacheDialog()"
-        [attr.aria-label]="language.t('clearAllCache')"
-        [title]="language.t('clearAllCache')"
-      >
-        <span aria-hidden="true">↻</span><span class="desktop-action-label">{{ language.t('clearAllCache') }}</span>
-      </button>
-      <button
-        class="language-button shutdown-button"
-        type="button"
-        (click)="openShutdownDialog()"
-        [attr.aria-label]="language.t('closeApplication')"
-        [title]="language.t('closeApplication')"
-      >
-        <span aria-hidden="true">⏻</span><span class="desktop-action-label">{{ language.t('closeApplication') }}</span>
-      </button>
-    }
+    <button
+      class="language-button cache-button"
+      type="button"
+      (click)="openCacheDialog()"
+      [attr.aria-label]="language.t('clearAllCache')"
+      [title]="language.t('clearAllCache')"
+    >
+      <span aria-hidden="true">↻</span><span class="desktop-action-label">{{ language.t('clearAllCache') }}</span>
+    </button>
+    <button
+      class="language-button shutdown-button"
+      type="button"
+      (click)="openShutdownDialog()"
+      [attr.aria-label]="language.t('closeApplication')"
+      [title]="language.t('closeApplication')"
+    >
+      <span aria-hidden="true">⏻</span><span class="desktop-action-label">{{ language.t('closeApplication') }}</span>
+    </button>
     <button class="language-button" type="button" (click)="language.toggle()">{{ language.t('switchLanguage') }}</button
     ><button
       class="language-button theme-button"
