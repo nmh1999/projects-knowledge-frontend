@@ -1,16 +1,22 @@
-import {Component, HostListener, inject, input, output, signal} from '@angular/core';
+import {Component, computed, HostListener, inject, input, output, signal} from '@angular/core';
+import {FormsModule} from '@angular/forms';
 import {LanguageService} from '@shared/service/language.service';
 import {ThemeService} from '@shared/service/theme.service';
 import {DesktopService} from '@shared/service/integration/desktop/desktop.service';
+import {CodexService} from '@shared/service/integration/codex/codex.service';
+import {DtoCodexStatus} from '@shared/schema/response/codex/DtoCodexStatus';
+import {DtoCodexModel, DtoCodexSettings} from '@shared/schema/response/codex/DtoCodexSettings';
 
 @Component({
   selector: 'app-header',
   standalone: true,
+  imports: [FormsModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
 export class HeaderComponent {
   private readonly desktop = inject(DesktopService);
+  private readonly codex = inject(CodexService);
   readonly language = inject(LanguageService);
   readonly theme = inject(ThemeService);
   readonly menuOpen = input(false);
@@ -23,6 +29,100 @@ export class HeaderComponent {
   readonly clearingCache = signal(false);
   readonly cacheClearComplete = signal(false);
   readonly cacheClearError = signal(false);
+  readonly codexStatus = signal<DtoCodexStatus | null>(null);
+  readonly codexStatusLoading = signal(false);
+  readonly codexDialogOpen = signal(false);
+  readonly codexSettings = signal<DtoCodexSettings | null>(null);
+  readonly codexSettingsError = signal(false);
+  readonly codexSettingsSaving = signal(false);
+  readonly selectedCodexModel = signal('');
+  readonly selectedCodexEffort = signal('medium');
+  readonly defaultCodexModel = computed(() => this.codexSettings()?.models.find((model) => model.defaultModel) ?? null);
+  readonly selectedCodexModelDetails = computed<DtoCodexModel | null>(() => {
+    const settings = this.codexSettings();
+    if (!settings) return null;
+    const selected = this.selectedCodexModel();
+    return settings.models.find((model) => (selected ? model.id === selected : model.defaultModel)) ?? null;
+  });
+  readonly codexEffortOptions = computed(() => this.selectedCodexModelDetails()?.reasoningEfforts ?? []);
+  readonly codexStatusText = computed(() => {
+    this.language.current();
+    const status = this.codexStatus();
+    if (!status) return this.language.t(this.codexStatusLoading() ? 'codexChecking' : 'codexStatusUnknown');
+    if (!status?.enabled) return this.language.t('codexDisabled');
+    if (!status.connected) return this.language.t('codexUnavailable');
+    if (!status.ready) return this.language.t('codexSignInRequired');
+    const runtime = [status.model, status.reasoningEffort].filter(Boolean).join(' · ');
+    return runtime ? `${this.language.t('codexReady')} · ${runtime}` : this.language.t('codexReady');
+  });
+
+  openCodexSettings(): void {
+    this.codexDialogOpen.set(true);
+    this.loadCodexSettings();
+  }
+
+  closeCodexSettings(): void {
+    if (!this.codexSettingsSaving()) this.codexDialogOpen.set(false);
+  }
+
+  loadCodexSettings(): void {
+    if (this.codexStatusLoading()) return;
+    this.codexStatusLoading.set(true);
+    this.codexSettingsError.set(false);
+    this.codex.settings().subscribe({
+      next: (settings) => {
+        this.applyCodexSettings(settings);
+        this.codexStatusLoading.set(false);
+      },
+      error: () => {
+        this.codexSettings.set(null);
+        this.codexStatus.set({
+          enabled: true,
+          connected: false,
+          ready: false,
+          authenticationType: '',
+          model: '',
+          reasoningEffort: '',
+          activeRequests: 0
+        });
+        this.codexSettingsError.set(true);
+        this.codexStatusLoading.set(false);
+      }
+    });
+  }
+
+  selectCodexModel(model: string): void {
+    this.selectedCodexModel.set(model);
+    const details = this.selectedCodexModelDetails();
+    if (!details) return;
+    const efforts = details.reasoningEfforts.map((option) => option.value);
+    if (!efforts.includes(this.selectedCodexEffort())) {
+      this.selectedCodexEffort.set(details.defaultReasoningEffort || efforts[0] || 'medium');
+    }
+  }
+
+  selectCodexEffort(effort: string): void {
+    this.selectedCodexEffort.set(effort);
+  }
+
+  saveCodexSettings(): void {
+    if (this.codexSettingsSaving() || !this.selectedCodexModelDetails()) return;
+    this.codexSettingsSaving.set(true);
+    this.codexSettingsError.set(false);
+    this.codex
+      .updateSettings({model: this.selectedCodexModel(), reasoningEffort: this.selectedCodexEffort()})
+      .subscribe({
+        next: (settings) => {
+          this.applyCodexSettings(settings);
+          this.codexSettingsSaving.set(false);
+          this.codexDialogOpen.set(false);
+        },
+        error: () => {
+          this.codexSettingsSaving.set(false);
+          this.codexSettingsError.set(true);
+        }
+      });
+  }
 
   openCacheDialog(): void {
     this.cacheClearComplete.set(false);
@@ -81,10 +181,18 @@ export class HeaderComponent {
   closeShutdownDialogFromKeyboard(): void {
     this.closeShutdownDialog();
     this.closeCacheDialog();
+    this.closeCodexSettings();
   }
 
   private markShutdownComplete(): void {
     this.shuttingDown.set(false);
     this.shutdownComplete.set(true);
+  }
+
+  private applyCodexSettings(settings: DtoCodexSettings): void {
+    this.codexSettings.set(settings);
+    this.codexStatus.set(settings.status);
+    this.selectedCodexModel.set(settings.selectedModel);
+    this.selectedCodexEffort.set(settings.status.reasoningEffort);
   }
 }

@@ -57,4 +57,66 @@ describe('HeaderComponent desktop shutdown', () => {
     expect(fixture.nativeElement.querySelector('.cache-button')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.shutdown-button')).not.toBeNull();
   });
+
+  it('loads Codex settings on demand without starting a model request', () => {
+    const fixture = TestBed.createComponent(HeaderComponent);
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('.codex-status').click();
+    const request = TestBed.inject(HttpTestingController).expectOne('/api/codex/settings');
+    expect(request.request.method).toBe('GET');
+    request.flush(settingsResponse());
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.codex-dialog')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.codex-status').classList).toContain('ready');
+    expect(fixture.nativeElement.querySelector('.codex-status small').textContent).toContain('gpt-test');
+  });
+
+  it('saves a supported effort for new Codex requests', () => {
+    const fixture = TestBed.createComponent(HeaderComponent);
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.codex-status').click();
+    TestBed.inject(HttpTestingController).expectOne('/api/codex/settings').flush(settingsResponse());
+    fixture.detectChanges();
+
+    fixture.componentInstance.selectCodexEffort('high');
+    fixture.componentInstance.saveCodexSettings();
+    const request = TestBed.inject(HttpTestingController).expectOne('/api/codex/settings');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({model: '', reasoningEffort: 'high'});
+    request.flush({...settingsResponse(), status: {...settingsResponse().status, reasoningEffort: 'high'}});
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.codex-dialog')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.codex-status small').textContent).toContain('gpt-test');
+  });
+
+  function settingsResponse() {
+    return {
+      status: {
+        enabled: true,
+        connected: true,
+        ready: true,
+        authenticationType: 'chatgpt',
+        model: 'gpt-test',
+        reasoningEffort: 'medium',
+        activeRequests: 0
+      },
+      selectedModel: '',
+      models: [
+        {
+          id: 'gpt-test',
+          displayName: 'GPT Test',
+          description: 'Test model',
+          defaultModel: true,
+          defaultReasoningEffort: 'medium',
+          reasoningEfforts: [
+            {value: 'medium', description: 'Balanced'},
+            {value: 'high', description: 'Deeper'}
+          ]
+        }
+      ]
+    };
+  }
 });

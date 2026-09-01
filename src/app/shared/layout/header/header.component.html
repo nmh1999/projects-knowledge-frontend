@@ -15,6 +15,23 @@
       ><strong>Projects Knowledge</strong><small>{{ language.t('repositoryIntelligence') }}</small></span
     >
   </div>
+  <button
+    class="codex-status"
+    type="button"
+    [class.ready]="codexStatus()?.ready"
+    [class.warning]="codexStatus()?.connected && !codexStatus()?.ready"
+    [class.unavailable]="codexStatus() && !codexStatus()?.connected"
+    [class.checking]="codexStatusLoading()"
+    [attr.aria-label]="language.t('refreshCodexStatus')"
+    [title]="codexStatusText()"
+    (click)="openCodexSettings()"
+  >
+    <span class="codex-status-dot" aria-hidden="true"></span>
+    <span>Codex</span>
+    @if (codexStatus()?.model; as model) {
+      <small>{{ model }}</small>
+    }
+  </button>
   <div class="header-actions">
     <button
       class="language-button cache-button"
@@ -46,6 +63,94 @@
     </button>
   </div>
 </header>
+@if (codexDialogOpen()) {
+  <div class="shutdown-backdrop" (click)="closeCodexSettings()">
+    <section
+      class="shutdown-dialog codex-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="codex-settings-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="codex-dialog-head">
+        <span class="codex-settings-icon" aria-hidden="true">✦</span>
+        <div>
+          <h2 id="codex-settings-title">{{ language.t('codexSettingsTitle') }}</h2>
+          <p>{{ language.t('codexSettingsHint') }}</p>
+        </div>
+        <button
+          class="codex-dialog-close"
+          type="button"
+          [disabled]="codexSettingsSaving()"
+          [attr.aria-label]="language.t('close')"
+          (click)="closeCodexSettings()"
+        >
+          ×
+        </button>
+      </div>
+
+      @if (codexStatusLoading()) {
+        <div class="codex-settings-loading" role="status">
+          <span class="codex-settings-spinner" aria-hidden="true"></span>
+          <strong>{{ language.t('codexLoadingModels') }}</strong>
+          <small>{{ language.t('codexNoTokenHint') }}</small>
+        </div>
+      } @else if (codexSettings()?.status?.connected && codexSettings()?.models?.length) {
+        <div class="codex-settings-fields">
+          <label for="codex-model">{{ language.t('codexModel') }}</label>
+          <select id="codex-model" [ngModel]="selectedCodexModel()" (ngModelChange)="selectCodexModel($event)">
+            <option value="">{{ language.t('codexDefaultModel') }} — {{ defaultCodexModel()?.displayName }}</option>
+            @for (model of codexSettings()?.models; track model.id) {
+              <option [value]="model.id">
+                {{ model.displayName }}{{ model.defaultModel ? ' · ' + language.t('codexDefaultBadge') : '' }}
+              </option>
+            }
+          </select>
+          @if (selectedCodexModelDetails()?.description; as description) {
+            <small class="codex-field-hint">{{ description }}</small>
+          }
+
+          <label for="codex-effort">{{ language.t('codexReasoningEffort') }}</label>
+          <select id="codex-effort" [ngModel]="selectedCodexEffort()" (ngModelChange)="selectCodexEffort($event)">
+            @for (effort of codexEffortOptions(); track effort.value) {
+              <option [value]="effort.value">{{ language.t('codexEffort_' + effort.value) }}</option>
+            }
+          </select>
+          @if (selectedCodexModelDetails(); as model) {
+            @for (effort of model.reasoningEfforts; track effort.value) {
+              @if (effort.value === selectedCodexEffort() && effort.description) {
+                <small class="codex-field-hint">{{ effort.description }}</small>
+              }
+            }
+          }
+        </div>
+
+        @if (codexSettingsError()) {
+          <p class="shutdown-error" role="alert">{{ language.t('codexSettingsSaveFailed') }}</p>
+        }
+        <div class="shutdown-actions">
+          <button type="button" [disabled]="codexSettingsSaving()" (click)="closeCodexSettings()">
+            {{ language.t('close') }}
+          </button>
+          <button
+            class="confirm-cache"
+            type="button"
+            [disabled]="codexSettingsSaving() || !selectedCodexModelDetails()"
+            (click)="saveCodexSettings()"
+          >
+            {{ language.t(codexSettingsSaving() ? 'codexSettingsSaving' : 'codexSettingsSave') }}
+          </button>
+        </div>
+      } @else {
+        <div class="codex-settings-unavailable">
+          <strong>{{ language.t('codexUnavailable') }}</strong>
+          <p>{{ language.t('codexSettingsUnavailableHint') }}</p>
+          <button type="button" (click)="loadCodexSettings()">{{ language.t('tryAgain') }}</button>
+        </div>
+      }
+    </section>
+  </div>
+}
 @if (cacheDialogOpen()) {
   <div class="shutdown-backdrop" (click)="closeCacheDialog()">
     <section
