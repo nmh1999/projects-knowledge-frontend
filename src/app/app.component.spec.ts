@@ -535,6 +535,7 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     const http = TestBed.inject(HttpTestingController);
+    const labels = TestBed.inject(LanguageService);
     fixture.detectChanges();
     http.expectOne('/api/projects').flush([]);
     app.projects.set([
@@ -557,7 +558,12 @@ describe('AppComponent', () => {
     app.ask('Which framework?');
     const first = http.expectOne('/api/questions');
     expect(first.request.body.mode).toBe('basic');
-    first.flush({message: 'Failed'}, {status: 500, statusText: 'Error'});
+    first.flush(
+      {code: 'CODEX_TIMEOUT', message: 'Technical timeout', retryable: true},
+      {status: 504, statusText: 'Gateway Timeout'}
+    );
+    expect(app.error()).toBe(labels.t('codexTimeoutError'));
+    http.expectNone('/api/questions');
     app.searchMode.set('advanced');
     fixture.detectChanges();
     fixture.nativeElement.querySelector('.error-banner button').click();

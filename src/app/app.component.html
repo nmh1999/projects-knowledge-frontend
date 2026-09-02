@@ -65,9 +65,9 @@
           <div class="error-banner" role="alert">
             <span>!</span>
             <p>{{ error() }}</p>
-            @if (lastIntegration()) {
+            @if (answerRetryable() && lastIntegration()) {
               <button type="button" (click)="openIntegration(lastIntegration())">{{ language.t('tryAgain') }}</button>
-            } @else if (lastQuestion()) {
+            } @else if (answerRetryable() && lastQuestion()) {
               <button type="button" (click)="ask(lastQuestion(), lastSearchMode())">
                 {{ language.t('retryQuestion') }}
               </button>
@@ -136,9 +136,11 @@
             @if (answerRefreshError()) {
               <div class="error-banner answer-refresh-error" role="alert">
                 <p>{{ language.t('answerRefreshFailed') }} {{ answerRefreshError() }}</p>
-                <button type="button" [disabled]="answerBusy()" (click)="refreshAnswer()">
-                  {{ language.t('tryAgain') }}
-                </button>
+                @if (answerRefreshRetryable()) {
+                  <button type="button" [disabled]="answerBusy()" (click)="refreshAnswer()">
+                    {{ language.t('tryAgain') }}
+                  </button>
+                }
               </div>
             }
             <app-answer [answer]="answer()" />

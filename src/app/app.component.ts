@@ -1,4 +1,5 @@
 import {Component, computed, inject, OnInit, signal} from '@angular/core';
+import {HttpErrorResponse} from '@angular/common/http';
 import {HeaderComponent} from '@shared/layout/header/header.component';
 import {SidebarComponent} from '@shared/layout/sidebar/sidebar.component';
 import {ProjectOverviewComponent} from '@component/project/project-overview/project-overview.component';
@@ -17,6 +18,15 @@ import {QuestionHistoryService} from '@shared/service/question-history.service';
 import {RequestCancelledError} from '@shared/service/request-cancelled.error';
 import {finalize, Observable} from 'rxjs';
 import {HttpLoadingIndicatorComponent} from '@shared/component/general/http-loading-indicator/http-loading-indicator.component';
+
+const ERROR_TRANSLATION_KEYS: Record<string, string> = {
+  CODEX_TIMEOUT: 'codexTimeoutError',
+  CODEX_UNAVAILABLE: 'codexUnavailableError',
+  CODEX_AUTH_REQUIRED: 'codexAuthError',
+  CODEX_INVALID_RESPONSE: 'codexInvalidResponseError',
+  CODEX_REQUEST_REJECTED: 'codexRejectedError',
+  CODEX_REQUEST_FAILED: 'codexRequestError'
+};
 
 @Component({
   selector: 'app-root',
@@ -50,6 +60,8 @@ export class AppComponent implements OnInit {
   readonly answerCancelled = signal(false);
   readonly answerRefreshing = signal(false);
   readonly answerRefreshError = signal('');
+  readonly answerRetryable = signal(false);
+  readonly answerRefreshRetryable = signal(false);
   readonly answerBusy = computed(() => this.loading() || this.answerRefreshing());
   private answerRequest:
     | {kind: 'question'; body: ReqQuestion}
@@ -100,12 +112,12 @@ export class AppComponent implements OnInit {
           return;
         }
         if (refresh && this.projects().length) {
-          this.projectsRefreshError.set(response.error?.message || this.language.t('connectError'));
+          this.projectsRefreshError.set(this.describeError(response, 'connectError').message);
           return;
         }
         this.projects.set([]);
         this.clearSelection();
-        this.error.set(response.error?.message || this.language.t('connectError'));
+        this.error.set(this.describeError(response, 'connectError').message);
       }
     });
   }
@@ -151,7 +163,7 @@ export class AppComponent implements OnInit {
       error: (response) => {
         if (version === this.selectionVersion) {
           if (response instanceof RequestCancelledError) this.overviewCancelled.set(true);
-          else this.overviewError.set(response.error?.message || this.language.t('overviewError'));
+          else this.overviewError.set(this.describeError(response, 'overviewError').message);
           this.overviewLoading.set(false);
         }
       }
@@ -180,7 +192,7 @@ export class AppComponent implements OnInit {
       error: (response) => {
         if (version === this.selectionVersion) {
           if (!(response instanceof RequestCancelledError))
-            this.overviewRefreshError.set(response.error?.message || this.language.t('overviewError'));
+            this.overviewRefreshError.set(this.describeError(response, 'overviewError').message);
           this.overviewRefreshing.set(false);
         }
       }
@@ -240,6 +252,8 @@ export class AppComponent implements OnInit {
     this.answerRequest = null;
     this.answerRefreshing.set(false);
     this.answerRefreshError.set('');
+    this.answerRetryable.set(false);
+    this.answerRefreshRetryable.set(false);
   }
   private formatAnswerDate(value: string | null | undefined): {iso: string; label: string} | null {
     if (!value) return null;
@@ -262,6 +276,8 @@ export class AppComponent implements OnInit {
     this.answerCancelled.set(false);
     this.error.set('');
     this.answerRefreshError.set('');
+    this.answerRetryable.set(false);
+    this.answerRefreshRetryable.set(false);
     if (!refresh) {
       this.answer.set(null);
       this.scrollToResults();
@@ -277,19 +293,38 @@ export class AppComponent implements OnInit {
       )
       .subscribe({
         next: (answer) => {
-          if (version === this.selectionVersion) this.answer.set(answer);
+          if (version === this.selectionVersion) {
+            this.answer.set(answer);
+            this.answerRetryable.set(false);
+            this.answerRefreshRetryable.set(false);
+          }
         },
         error: (response) => {
           if (response instanceof RequestCancelledError) {
             if (version === this.selectionVersion && !refresh) this.answerCancelled.set(true);
             return;
           }
-          if (version === this.selectionVersion)
-            (refresh ? this.answerRefreshError : this.error).set(
-              response.error?.message || this.language.t('analysisError')
-            );
+          if (version === this.selectionVersion) {
+            const failure = this.describeError(response, 'analysisError');
+            (refresh ? this.answerRefreshError : this.error).set(failure.message);
+            (refresh ? this.answerRefreshRetryable : this.answerRetryable).set(failure.retryable);
+          }
         }
       });
+  }
+  /** Translate stable backend categories; raw transport details never need to reach the page. */
+  private describeError(response: HttpErrorResponse, fallbackKey: string): {message: string; retryable: boolean} {
+    const code = typeof response.error?.code === 'string' ? response.error.code : '';
+    const key = ERROR_TRANSLATION_KEYS[code];
+    const fallback =
+      typeof response.error?.message === 'string' ? response.error.message : this.language.t(fallbackKey);
+    return {
+      message: key ? this.language.t(key) : fallback,
+      retryable:
+        typeof response.error?.retryable === 'boolean'
+          ? response.error.retryable
+          : response.status === 0 || response.status >= 500
+    };
   }
   private scrollToResults(): void {
     window.setTimeout(() =>
