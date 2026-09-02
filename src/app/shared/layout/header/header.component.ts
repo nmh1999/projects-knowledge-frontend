@@ -15,10 +15,8 @@ import {DtoCodexModel, DtoCodexSettings} from '@shared/schema/response/codex/Dto
   styleUrl: './header.component.scss'
 })
 export class HeaderComponent implements OnInit {
-  private static readonly CODEX_SETTINGS_MAX_AGE_MS = 5 * 60 * 60 * 1000;
   private readonly desktop = inject(DesktopService);
   private readonly codex = inject(CodexService);
-  private codexSettingsLoadedAt = 0;
   readonly language = inject(LanguageService);
   readonly theme = inject(ThemeService);
   readonly menuOpen = input(false);
@@ -66,10 +64,7 @@ export class HeaderComponent implements OnInit {
 
   openCodexSettings(): void {
     this.codexDialogOpen.set(true);
-    const settingsAreFresh =
-      this.codexSettings() !== null &&
-      Date.now() - this.codexSettingsLoadedAt < HeaderComponent.CODEX_SETTINGS_MAX_AGE_MS;
-    if (!settingsAreFresh) this.loadCodexSettings();
+    this.loadCodexSettings();
   }
 
   closeCodexSettings(): void {
@@ -83,7 +78,6 @@ export class HeaderComponent implements OnInit {
     this.codex.settings().subscribe({
       next: (settings) => {
         this.applyCodexSettings(settings);
-        this.codexSettingsLoadedAt = Date.now();
         this.codexSettingsLoading.set(false);
       },
       error: () => {
@@ -149,7 +143,6 @@ export class HeaderComponent implements OnInit {
       .subscribe({
         next: (settings) => {
           this.applyCodexSettings(settings);
-          this.codexSettingsLoadedAt = Date.now();
           this.codexSettingsSaving.set(false);
           this.codexDialogOpen.set(false);
         },

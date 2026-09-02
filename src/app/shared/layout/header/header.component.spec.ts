@@ -77,31 +77,6 @@ describe('HeaderComponent desktop shutdown', () => {
     expect(fixture.nativeElement.querySelector('.codex-status small').textContent).toContain('gpt-test');
   });
 
-  it('reuses Codex settings for five hours and reloads them at expiry', () => {
-    const now = spyOn(Date, 'now').and.returnValue(0);
-    const fixture = TestBed.createComponent(HeaderComponent);
-    const http = TestBed.inject(HttpTestingController);
-    fixture.detectChanges();
-    flushInitialCodexStatus();
-
-    fixture.nativeElement.querySelector('.codex-status').click();
-    http.expectOne('/api/codex/settings').flush(settingsResponse());
-    fixture.detectChanges();
-    fixture.nativeElement.querySelector('.codex-dialog-close').click();
-    fixture.detectChanges();
-    fixture.nativeElement.querySelector('.codex-status').click();
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.querySelector('.codex-dialog')).not.toBeNull();
-    http.expectNone('/api/codex/settings');
-
-    fixture.nativeElement.querySelector('.codex-dialog-close').click();
-    fixture.detectChanges();
-    now.and.returnValue(5 * 60 * 60 * 1000);
-    fixture.nativeElement.querySelector('.codex-status').click();
-    http.expectOne('/api/codex/settings').flush(settingsResponse());
-  });
-
   it('saves a supported effort for new Codex requests', () => {
     const fixture = TestBed.createComponent(HeaderComponent);
     fixture.detectChanges();
