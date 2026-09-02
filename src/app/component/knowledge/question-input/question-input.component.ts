@@ -30,8 +30,9 @@ export class QuestionInputComponent {
   readonly question = new FormControl('', {nonNullable: true, validators: [Validators.required]});
   constructor() {
     effect(() => {
-      this.resetKey();
+      const resetKey = this.resetKey();
       this.question.setValue('');
+      if (resetKey) queueMicrotask(() => this.questionField?.nativeElement.focus({preventScroll: true}));
     });
   }
   clear(): void {

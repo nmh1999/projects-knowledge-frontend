@@ -1,5 +1,5 @@
 .ask-card {
-  padding: 24px;
+  padding: 22px;
   border: 1px solid #315873;
   border-radius: 16px;
   color: #fff;
@@ -28,19 +28,12 @@
   font-size: 13px;
   line-height: 1.6;
 }
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-form {
-  margin-top: 18px;
+.question-label {
+  display: block;
+  margin: 14px 0 7px;
+  color: #d6e4ed;
+  font-size: 11px;
+  font-weight: 650;
 }
 .question-field {
   position: relative;
@@ -48,7 +41,7 @@ form {
 .question-field textarea {
   display: block;
   width: 100%;
-  min-height: 104px;
+  min-height: 96px;
   padding-block: 14px;
   padding-inline: 14px 46px;
   resize: vertical;
@@ -94,11 +87,13 @@ form {
 .form-foot {
   display: flex;
   justify-content: flex-end;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 .mode-picker {
+  width: 100%;
+  max-width: 560px;
+  margin-top: 16px;
   min-width: 0;
-  margin-bottom: 14px;
 }
 .search-modes {
   margin: 0;
@@ -115,7 +110,7 @@ form {
 .mode-options {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
-  width: 420px;
+  width: 100%;
   max-width: 100%;
   gap: 3px;
   padding: 3px;
@@ -180,7 +175,7 @@ form {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: 38px;
   min-width: 126px;
   padding: 10px 16px;
   border: 0;

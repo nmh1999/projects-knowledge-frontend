@@ -37,27 +37,27 @@
         <button
           type="button"
           class="copy-all-button"
+          [class.copied]="copiedTarget() === 'full'"
           (click)="copyFullAnswer(result)"
-          [attr.aria-label]="language.t('copyFullAnswer')"
+          [attr.aria-label]="language.t(copiedTarget() === 'full' ? 'answerCopied' : 'copyFullAnswer')"
         >
-          <span>↗</span>{{ language.t('copyFullAnswer') }}
+          <span aria-hidden="true">{{ copiedTarget() === 'full' ? '✓' : '↗' }}</span
+          >{{ language.t('copyFullAnswer') }}
         </button>
       </div>
-      @if (copyStatus()) {
-        <div class="copy-status" role="status">✓ {{ language.t(copyStatus()!) }}</div>
+      @if (copyFailed()) {
+        <div class="copy-status" role="alert">! {{ language.t('copyFailed') }}</div>
       }
       <section id="summary" class="card summary copy-card" [class.insufficient]="!result.enoughEvidence">
         <button
           class="section-copy"
+          [class.copied]="copiedTarget() === 'summary'"
           type="button"
-          (click)="
-            copySection(language.t('summary'), [
-              result.summary,
-              language.t('confidence') + ': ' + language.t('confidence_' + result.confidence)
-            ])
-          "
+          (click)="copySection('summary', [result.summary])"
+          [attr.aria-label]="language.t(copiedTarget() === 'summary' ? 'sectionCopied' : 'copySection')"
         >
-          ⧉ {{ language.t('copySection') }}
+          <span aria-hidden="true">{{ copiedTarget() === 'summary' ? '✓' : '⧉' }}</span
+          >{{ language.t('copySection') }}
         </button>
         <div class="summary-icon">✦</div>
         <div>
@@ -70,10 +70,12 @@
         <section class="card result-section copy-card">
           <button
             class="section-copy"
+            [class.copied]="copiedTarget() === 'findings'"
             type="button"
-            (click)="copySection(language.t('keyFindings'), result.keyFindings)"
+            (click)="copySection('findings', result.keyFindings)"
           >
-            ⧉ {{ language.t('copySection') }}
+            <span aria-hidden="true">{{ copiedTarget() === 'findings' ? '✓' : '⧉' }}</span
+            >{{ language.t('copySection') }}
           </button>
           <h3>{{ language.t('keyFindings') }}</h3>
           <div class="finding-grid">
@@ -90,10 +92,12 @@
         <section class="card result-section copy-card">
           <button
             class="section-copy"
+            [class.copied]="copiedTarget() === 'roles'"
             type="button"
-            (click)="copySection(language.t('rolesPermissions'), roleLines(result))"
+            (click)="copySection('roles', roleLines(result))"
           >
-            ⧉ {{ language.t('copySection') }}
+            <span aria-hidden="true">{{ copiedTarget() === 'roles' ? '✓' : '⧉' }}</span
+            >{{ language.t('copySection') }}
           </button>
           <h3>{{ language.t('rolesPermissions') }}</h3>
           <div class="roles-grid">
@@ -117,10 +121,12 @@
             <section class="card result-section caution copy-card">
               <button
                 class="section-copy"
+                [class.copied]="copiedTarget() === 'risks'"
                 type="button"
-                (click)="copySection(language.t('risksCaveats'), result.risks)"
+                (click)="copySection('risks', result.risks)"
               >
-                ⧉ {{ language.t('copySection') }}
+                <span aria-hidden="true">{{ copiedTarget() === 'risks' ? '✓' : '⧉' }}</span
+                >{{ language.t('copySection') }}
               </button>
               <h3>{{ language.t('risksCaveats') }}</h3>
               <ul>
@@ -134,10 +140,12 @@
             <section class="card result-section followups copy-card">
               <button
                 class="section-copy"
+                [class.copied]="copiedTarget() === 'followups'"
                 type="button"
-                (click)="copySection(language.t('suggestedQuestions'), result.followUpQuestions)"
+                (click)="copySection('followups', result.followUpQuestions)"
               >
-                ⧉ {{ language.t('copySection') }}
+                <span aria-hidden="true">{{ copiedTarget() === 'followups' ? '✓' : '⧉' }}</span
+                >{{ language.t('copySection') }}
               </button>
               <h3>{{ language.t('suggestedQuestions') }}</h3>
               <ul>
@@ -153,10 +161,12 @@
         <div id="flow" class="card copy-card">
           <button
             class="section-copy"
+            [class.copied]="copiedTarget() === 'flow'"
             type="button"
-            (click)="copySection(language.t('businessFlow'), result.businessFlow)"
+            (click)="copySection('flow', result.businessFlow)"
           >
-            ⧉ {{ language.t('copySection') }}</button
+            <span aria-hidden="true">{{ copiedTarget() === 'flow' ? '✓' : '⧉' }}</span
+            >{{ language.t('copySection') }}</button
           ><app-business-flow [steps]="result.businessFlow" />
         </div>
       }
@@ -164,10 +174,12 @@
         <section id="workflow-diagram" class="card result-section diagram-section copy-card">
           <button
             class="section-copy"
+            [class.copied]="copiedTarget() === 'workflow-diagram'"
             type="button"
-            (click)="copySection(language.t('workflowDiagram'), diagramLines(result))"
+            (click)="copySection('workflow-diagram', diagramLines(result))"
           >
-            ⧉ {{ language.t('copyDiagramText') }}
+            <span aria-hidden="true">{{ copiedTarget() === 'workflow-diagram' ? '✓' : '⧉' }}</span
+            >{{ language.t('copyDiagramText') }}
           </button>
           <h3>{{ language.t('workflowDiagram') }}</h3>
           <app-workflow-diagram [diagram]="result.workflowDiagram" />
@@ -177,12 +189,12 @@
         <section id="workflow-example" class="card result-section workflow-example copy-card">
           <button
             class="section-copy"
+            [class.copied]="copiedTarget() === 'workflow-example'"
             type="button"
-            (click)="
-              copySection(language.t('workflowExample'), [language.t('workflowExampleNote'), result.workflowExample])
-            "
+            (click)="copySection('workflow-example', [language.t('workflowExampleNote'), result.workflowExample])"
           >
-            ⧉ {{ language.t('copySection') }}
+            <span aria-hidden="true">{{ copiedTarget() === 'workflow-example' ? '✓' : '⧉' }}</span
+            >{{ language.t('copySection') }}
           </button>
           <h3>{{ language.t('workflowExample') }}</h3>
           <small>{{ language.t('workflowExampleNote') }}</small>
@@ -193,10 +205,12 @@
         <div class="card copy-card">
           <button
             class="section-copy"
+            [class.copied]="copiedTarget() === 'technical-flow'"
             type="button"
-            (click)="copySection(language.t('technicalFlow'), technicalFlowLines(result))"
+            (click)="copySection('technical-flow', technicalFlowLines(result))"
           >
-            ⧉ {{ language.t('copySection') }}</button
+            <span aria-hidden="true">{{ copiedTarget() === 'technical-flow' ? '✓' : '⧉' }}</span
+            >{{ language.t('copySection') }}</button
           ><app-technical-flow [nodes]="result.technicalFlow" />
         </div>
       }
@@ -204,10 +218,12 @@
         <section id="technical" class="card technical copy-card">
           <button
             class="section-copy"
+            [class.copied]="copiedTarget() === 'technical-details'"
             type="button"
-            (click)="copySection(language.t('technicalDetails'), technicalDetailLines(result))"
+            (click)="copySection('technical-details', technicalDetailLines(result))"
           >
-            ⧉ {{ language.t('copySection') }}
+            <span aria-hidden="true">{{ copiedTarget() === 'technical-details' ? '✓' : '⧉' }}</span
+            >{{ language.t('copySection') }}
           </button>
           <h3>{{ language.t('technicalDetails') }}</h3>
           <div class="technical-grid">
@@ -228,8 +244,14 @@
         <div id="details" class="detail-grid">
           @if (result.apis.length) {
             <div id="api-details" class="card copy-card">
-              <button class="section-copy" type="button" (click)="copySection(language.t('apis'), apiLines(result))">
-                ⧉ {{ language.t('copySection') }}</button
+              <button
+                class="section-copy"
+                [class.copied]="copiedTarget() === 'apis'"
+                type="button"
+                (click)="copySection('apis', apiLines(result))"
+              >
+                <span aria-hidden="true">{{ copiedTarget() === 'apis' ? '✓' : '⧉' }}</span
+                >{{ language.t('copySection') }}</button
               ><app-api-list [items]="result.apis" />
             </div>
           }
@@ -237,10 +259,12 @@
             <div id="database-details" class="card copy-card">
               <button
                 class="section-copy"
+                [class.copied]="copiedTarget() === 'database'"
                 type="button"
-                (click)="copySection(language.t('database'), databaseLines(result))"
+                (click)="copySection('database', databaseLines(result))"
               >
-                ⧉ {{ language.t('copySection') }}</button
+                <span aria-hidden="true">{{ copiedTarget() === 'database' ? '✓' : '⧉' }}</span
+                >{{ language.t('copySection') }}</button
               ><app-database-info [items]="result.database" />
             </div>
           }
@@ -248,10 +272,12 @@
             <div id="integration-details" class="card copy-card">
               <button
                 class="section-copy"
+                [class.copied]="copiedTarget() === 'integrations'"
                 type="button"
-                (click)="copySection(language.t('integrations'), integrationLines(result))"
+                (click)="copySection('integrations', integrationLines(result))"
               >
-                ⧉ {{ language.t('copySection') }}</button
+                <span aria-hidden="true">{{ copiedTarget() === 'integrations' ? '✓' : '⧉' }}</span
+                >{{ language.t('copySection') }}</button
               ><app-integrations [items]="result.integrations" />
             </div>
           }
@@ -259,10 +285,12 @@
             <div class="card copy-card">
               <button
                 class="section-copy"
+                [class.copied]="copiedTarget() === 'scheduled-jobs'"
                 type="button"
-                (click)="copySection(language.t('scheduledJobsTitle'), scheduledJobLines(result))"
+                (click)="copySection('scheduled-jobs', scheduledJobLines(result))"
               >
-                ⧉ {{ language.t('copySection') }}</button
+                <span aria-hidden="true">{{ copiedTarget() === 'scheduled-jobs' ? '✓' : '⧉' }}</span
+                >{{ language.t('copySection') }}</button
               ><app-scheduled-jobs [items]="result.scheduledJobs" />
             </div>
           }
@@ -272,10 +300,12 @@
         <div id="sources" class="card copy-card">
           <button
             class="section-copy"
+            [class.copied]="copiedTarget() === 'sources'"
             type="button"
-            (click)="copySection(language.t('sourceEvidence'), sourceLines(result))"
+            (click)="copySection('sources', sourceLines(result))"
           >
-            ⧉ {{ language.t('copySection') }}</button
+            <span aria-hidden="true">{{ copiedTarget() === 'sources' ? '✓' : '⧉' }}</span
+            >{{ language.t('copySection') }}</button
           ><app-source-viewer [sources]="result.sources" />
         </div>
       }

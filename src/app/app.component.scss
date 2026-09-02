@@ -22,9 +22,9 @@ main {
   border: 1px solid #f0c8cc;
   background: #fff5f6;
   color: #943845;
-  border-radius: 12px;
-  padding: 11px 13px;
-  font-size: 12px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -48,8 +48,9 @@ main {
   border-radius: 8px;
   background: #fff;
   color: #943845;
-  padding: 6px 9px;
-  font-size: 10px;
+  min-height: 34px;
+  padding: 7px 11px;
+  font-size: 11px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -183,9 +184,13 @@ main {
   }
 }
 .project-prompt {
-  max-width: 460px;
-  margin: 90px auto;
-  padding: 28px;
+  max-width: 540px;
+  margin: 72px auto;
+  padding: 38px 34px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
   text-align: center;
   color: var(--ink);
 }

@@ -30,15 +30,17 @@ import {LanguageService} from '@shared/service/language.service';
 export class AnswerComponent {
   readonly language = inject(LanguageService);
   readonly answer = input<DtoKnowledgeAnswer | null>(null);
-  readonly copyStatus = signal<string | null>(null);
+  readonly copiedTarget = signal<string | null>(null);
+  readonly copyFailed = signal(false);
+  private statusTimer?: number;
 
   async copyFullAnswer(result: DtoKnowledgeAnswer): Promise<void> {
-    await this.copyText(this.formatAnswer(result), 'answerCopied');
+    await this.copyText(this.formatAnswer(result), 'full');
   }
 
-  async copySection(title: string, items: string[]): Promise<void> {
-    const text = [`${title}:`, ...items.map((item, index) => `${index + 1}. ${item}`)].join('\n');
-    await this.copyText(text, 'sectionCopied');
+  async copySection(target: string, items: string[]): Promise<void> {
+    const text = items.length === 1 ? items[0] : items.map((item, index) => `${index + 1}. ${item}`).join('\n');
+    await this.copyText(text, target);
   }
 
   roleLines(result: DtoKnowledgeAnswer): string[] {
@@ -100,10 +102,10 @@ export class AnswerComponent {
     );
   }
 
-  private async copyText(text: string, successKey: string): Promise<void> {
+  private async copyText(text: string, target: string): Promise<void> {
     try {
       await navigator.clipboard.writeText(text);
-      this.showStatus(successKey);
+      this.showCopied(target);
     } catch {
       const textarea = document.createElement('textarea');
       textarea.value = text;
@@ -113,7 +115,7 @@ export class AnswerComponent {
       textarea.select();
       const copied = document.execCommand('copy');
       textarea.remove();
-      this.showStatus(copied ? successKey : 'copyFailed');
+      copied ? this.showCopied(target) : this.showCopyFailure();
     }
   }
 
@@ -124,8 +126,7 @@ export class AnswerComponent {
       `${this.language.t('questionLabel')}: ${result.question}`,
       '',
       `${this.language.t('summary')}:`,
-      result.summary,
-      `${this.language.t('confidence')}: ${this.language.t('confidence_' + result.confidence)}`
+      result.summary
     ];
     this.addSection(lines, this.language.t('keyFindings'), result.keyFindings);
     this.addSection(lines, this.language.t('rolesPermissions'), this.roleLines(result));
@@ -153,8 +154,21 @@ export class AnswerComponent {
     lines.push('', `${title}:`, ...items.map((item, index) => `${index + 1}. ${item}`));
   }
 
-  private showStatus(key: string): void {
-    this.copyStatus.set(key);
-    window.setTimeout(() => this.copyStatus.set(null), 3000);
+  private showCopied(target: string): void {
+    this.clearStatusTimer();
+    this.copyFailed.set(false);
+    this.copiedTarget.set(target);
+    this.statusTimer = window.setTimeout(() => this.copiedTarget.set(null), 3000);
+  }
+
+  private showCopyFailure(): void {
+    this.clearStatusTimer();
+    this.copiedTarget.set(null);
+    this.copyFailed.set(true);
+    this.statusTimer = window.setTimeout(() => this.copyFailed.set(false), 3000);
+  }
+
+  private clearStatusTimer(): void {
+    if (this.statusTimer !== undefined) window.clearTimeout(this.statusTimer);
   }
 }

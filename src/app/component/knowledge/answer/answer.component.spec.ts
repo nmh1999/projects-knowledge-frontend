@@ -93,6 +93,21 @@ describe('Basic summary answer', () => {
     expect(host.querySelector('app-workflow-diagram')).toBeNull();
     expect(host.querySelector('code')).toBeNull();
     expect(host.querySelector('.section-copy')).not.toBeNull();
+    const summary = host.querySelector<HTMLElement>('#summary')!;
+    const summaryTop = summary.getBoundingClientRect().top;
+    const copy = spyOn(navigator.clipboard, 'writeText').and.resolveTo();
+    await fixture.componentInstance.copySection('summary', [answer.summary]);
+    fixture.detectChanges();
+    expect(copy).toHaveBeenCalledOnceWith('Uses Angular.');
+    expect(copy.calls.mostRecent().args[0]).not.toContain('Summary');
+    expect(copy.calls.mostRecent().args[0]).not.toContain('Confidence');
+    expect(host.querySelector('.copy-status')).toBeNull();
+    expect(host.querySelector('#summary .section-copy.copied')?.textContent).toContain('✓');
+    expect(summary.getBoundingClientRect().top).toBe(summaryTop);
+    await fixture.componentInstance.copyFullAnswer(answer);
+    fixture.detectChanges();
+    expect(host.querySelector('.copy-all-button.copied')?.textContent).toContain('✓');
+    expect(copy.calls.mostRecent().args[0]).not.toContain('Confidence');
     for (const language of ['en', 'ar'] as const)
       for (const confidence of ['high', 'medium', 'low'] as const) {
         const labels = TestBed.inject(LanguageService);

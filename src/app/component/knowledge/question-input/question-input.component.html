@@ -1,10 +1,10 @@
-<section class="ask-card">
-  <header class="ask-copy">
-    <!-- prettier-ignore -->
-    <h1>{{ language.t('askAnything') }} <bdi dir="auto">{{ projectName() }}</bdi></h1>
-    <p>{{ language.t('searchHelp') }}</p>
-  </header>
+<section class="ask-card" [attr.aria-busy]="loading()">
   <form (submit)="submit($event)">
+    <header class="ask-copy">
+      <!-- prettier-ignore -->
+      <h1>{{ language.t('askAnything') }} <bdi dir="auto">{{ projectName() }}</bdi></h1>
+      <p>{{ language.t('searchHelp') }}</p>
+    </header>
     <div class="mode-picker">
       <fieldset class="search-modes" [disabled]="loading()" aria-describedby="mode-hint">
         <legend>{{ language.t('searchMode') }}</legend>
@@ -22,9 +22,9 @@
           }
         </div>
       </fieldset>
-      <p class="mode-hint" id="mode-hint">{{ language.t(mode() + 'Hint') }}</p>
+      <p class="mode-hint" id="mode-hint" aria-live="polite">{{ language.t(mode() + 'Hint') }}</p>
     </div>
-    <label class="sr-only" for="project-question">{{ language.t('questionLabel') }}</label>
+    <label class="question-label" for="project-question">{{ language.t('questionLabel') }}</label>
     <div class="question-field">
       <textarea
         #questionField

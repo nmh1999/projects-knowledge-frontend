@@ -51,22 +51,27 @@
   filter: brightness(1.08);
 }
 .copy-all-button span {
+  display: inline-block;
+  min-width: 13px;
+  text-align: center;
   font-size: 13px;
 }
 .copy-status {
-  position: sticky;
-  top: 10px;
+  position: fixed;
+  top: 88px;
+  inset-inline-end: 24px;
+  z-index: 50;
   width: max-content;
   max-width: 100%;
-  margin: 0;
-  margin-inline-start: auto;
   padding: 8px 12px;
   border-radius: 9px;
-  background: #e5f7ef;
-  color: #187650;
-  border: 1px solid #bce6d4;
+  background: #fff5f6;
+  color: #943845;
+  border: 1px solid #f0c8cc;
   font-size: 9px;
   font-weight: 800;
+  box-shadow: 0 8px 24px rgba(15, 47, 78, 0.14);
+  pointer-events: none;
 }
 .card {
   background: #fff;
@@ -94,7 +99,7 @@
   place-items: center;
   flex: none;
 }
-.summary span {
+.summary > div:last-child > span {
   text-transform: uppercase;
   font-size: 8px;
   letter-spacing: 0.11em;
@@ -377,6 +382,14 @@
   font-size: 8px;
   font-weight: 800;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.section-copy span {
+  display: inline-block;
+  min-width: 10px;
+  text-align: center;
 }
 .section-copy:hover {
   background: #edf6fb;
@@ -415,7 +428,7 @@
 .summary {
   padding: 26px;
 }
-.summary span {
+.summary > div:last-child > span {
   font-size: 9px;
 }
 .summary h2 {

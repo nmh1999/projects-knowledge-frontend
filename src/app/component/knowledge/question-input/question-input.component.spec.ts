@@ -226,12 +226,33 @@ describe('Question search modes', () => {
       expect(host.querySelectorAll('.mode-hint').length).toBe(1);
       expect(host.querySelector('.search-modes small')).toBeNull();
       expect(host.querySelector('.mode-hint')?.textContent).toBe(fixture.componentInstance.language.t('basicHint'));
+      expect(host.querySelector('.mode-hint')?.getAttribute('aria-live')).toBe('polite');
+      expect(host.querySelector('.question-label')?.textContent).toBe(
+        fixture.componentInstance.language.t('questionLabel')
+      );
       expect(host.querySelector('textarea')?.hasAttribute('maxlength')).toBeFalse();
       expect(host.querySelector('textarea')?.getAttribute('dir')).toBe(language === 'ar' ? 'rtl' : 'ltr');
     }
     fixture.componentInstance.question.setValue('Mixed direction text');
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('textarea').getAttribute('dir')).toBe('auto');
+  });
+
+  it('focuses the question field without scrolling when a project is selected', async () => {
+    const textarea = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+    const focus = spyOn(textarea, 'focus');
+    fixture.componentRef.setInput('resetKey', 'project-a');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(focus).toHaveBeenCalledOnceWith({preventScroll: true});
+  });
+
+  it('exposes the loading state on the question card', () => {
+    const card = fixture.nativeElement.querySelector('.ask-card') as HTMLElement;
+    expect(card.getAttribute('aria-busy')).toBe('false');
+    fixture.componentRef.setInput('loading', true);
+    fixture.detectChanges();
+    expect(card.getAttribute('aria-busy')).toBe('true');
   });
 
   it('does not submit whitespace, composing text or a held Enter key', () => {
