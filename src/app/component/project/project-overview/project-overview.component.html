@@ -59,7 +59,7 @@
       <div class="domain-block">
         <h3>{{ language.t('detectedModules') }}</h3>
         <div class="chips">
-          @for (domain of item.overview.domains; track domain) {
+          @for (domain of item.overview.domains; track $index) {
             <span>{{ domain }}</span>
           }
         </div>
@@ -112,7 +112,7 @@
         </div>
         @if (filteredIntegrations().length) {
           <ul class="integration-grid" [attr.aria-label]="language.t('repositoryIntegrations')">
-            @for (value of filteredIntegrations(); track value) {
+            @for (value of filteredIntegrations(); track $index) {
               <li>
                 <button
                   type="button"

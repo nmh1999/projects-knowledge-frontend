@@ -89,7 +89,7 @@
         </button>
       </div>
 
-      @if (codexStatusLoading()) {
+      @if (codexSettingsLoading()) {
         <div class="codex-settings-loading" role="status">
           <span class="codex-settings-spinner" aria-hidden="true"></span>
           <strong>{{ language.t('codexLoadingModels') }}</strong>

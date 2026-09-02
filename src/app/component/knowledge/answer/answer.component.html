@@ -124,7 +124,7 @@
               </button>
               <h3>{{ language.t('risksCaveats') }}</h3>
               <ul>
-                @for (item of result.risks; track item) {
+                @for (item of result.risks; track $index) {
                   <li>{{ item }}</li>
                 }
               </ul>
@@ -141,7 +141,7 @@
               </button>
               <h3>{{ language.t('suggestedQuestions') }}</h3>
               <ul>
-                @for (item of result.followUpQuestions; track item) {
+                @for (item of result.followUpQuestions; track $index) {
                   <li>{{ item }}</li>
                 }
               </ul>

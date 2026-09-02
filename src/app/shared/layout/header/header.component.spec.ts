@@ -17,6 +17,7 @@ describe('HeaderComponent desktop shutdown', () => {
     const fixture = TestBed.createComponent(HeaderComponent);
     const labels = TestBed.inject(LanguageService);
     fixture.detectChanges();
+    flushInitialCodexStatus();
 
     fixture.nativeElement.querySelector('.shutdown-button').click();
     fixture.detectChanges();
@@ -38,6 +39,7 @@ describe('HeaderComponent desktop shutdown', () => {
     const fixture = TestBed.createComponent(HeaderComponent);
     const labels = TestBed.inject(LanguageService);
     fixture.detectChanges();
+    flushInitialCodexStatus();
 
     fixture.nativeElement.querySelector('.cache-button').click();
     fixture.detectChanges();
@@ -53,6 +55,7 @@ describe('HeaderComponent desktop shutdown', () => {
   it('always shows cache and shutdown controls without a desktop query parameter', () => {
     const fixture = TestBed.createComponent(HeaderComponent);
     fixture.detectChanges();
+    flushInitialCodexStatus();
 
     expect(fixture.nativeElement.querySelector('.cache-button')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.shutdown-button')).not.toBeNull();
@@ -61,6 +64,7 @@ describe('HeaderComponent desktop shutdown', () => {
   it('loads Codex settings on demand without starting a model request', () => {
     const fixture = TestBed.createComponent(HeaderComponent);
     fixture.detectChanges();
+    flushInitialCodexStatus();
 
     fixture.nativeElement.querySelector('.codex-status').click();
     const request = TestBed.inject(HttpTestingController).expectOne('/api/codex/settings');
@@ -76,6 +80,7 @@ describe('HeaderComponent desktop shutdown', () => {
   it('saves a supported effort for new Codex requests', () => {
     const fixture = TestBed.createComponent(HeaderComponent);
     fixture.detectChanges();
+    flushInitialCodexStatus();
     fixture.nativeElement.querySelector('.codex-status').click();
     TestBed.inject(HttpTestingController).expectOne('/api/codex/settings').flush(settingsResponse());
     fixture.detectChanges();
@@ -118,5 +123,9 @@ describe('HeaderComponent desktop shutdown', () => {
         }
       ]
     };
+  }
+
+  function flushInitialCodexStatus(): void {
+    TestBed.inject(HttpTestingController).expectOne('/api/codex/status').flush(settingsResponse().status);
   }
 });

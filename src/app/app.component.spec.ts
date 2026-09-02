@@ -6,15 +6,31 @@ import {appConfig} from './app.config';
 import {LanguageService} from '@shared/service/language.service';
 import {DtoKnowledgeAnswer} from '@shared/schema/response/knowledge/DtoKnowledgeAnswer';
 import {QuestionHistoryService} from '@shared/service/question-history.service';
+import {CodexService} from '@shared/service/integration/codex/codex.service';
+import {of} from 'rxjs';
 
 describe('AppComponent', () => {
+  const codexStatus = {
+    enabled: true,
+    connected: true,
+    ready: true,
+    authenticationType: 'chatgpt',
+    model: 'gpt-test',
+    reasoningEffort: 'medium',
+    activeRequests: 0
+  };
+
   beforeEach(async () => {
     spyOn(Storage.prototype, 'getItem').and.returnValue(null);
     spyOn(Storage.prototype, 'setItem');
     spyOn(Storage.prototype, 'removeItem');
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()]
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {provide: CodexService, useValue: {status: () => of(codexStatus)}}
+      ]
     }).compileComponents();
   });
   const snapshot = {
@@ -577,6 +593,7 @@ describe('AppComponent', () => {
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
     http.expectOne('/api/projects').flush([]);
+    http.expectOne('/api/codex/status').flush(codexStatus);
     expect(fixture.nativeElement.textContent).toContain('Projects Knowledge');
     http.verify();
   });

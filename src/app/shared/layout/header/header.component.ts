@@ -1,4 +1,4 @@
-import {Component, computed, HostListener, inject, input, output, signal} from '@angular/core';
+import {Component, computed, HostListener, inject, input, OnInit, output, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {LanguageService} from '@shared/service/language.service';
 import {ThemeService} from '@shared/service/theme.service';
@@ -14,7 +14,7 @@ import {DtoCodexModel, DtoCodexSettings} from '@shared/schema/response/codex/Dto
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
   private readonly desktop = inject(DesktopService);
   private readonly codex = inject(CodexService);
   readonly language = inject(LanguageService);
@@ -33,6 +33,7 @@ export class HeaderComponent {
   readonly codexStatusLoading = signal(false);
   readonly codexDialogOpen = signal(false);
   readonly codexSettings = signal<DtoCodexSettings | null>(null);
+  readonly codexSettingsLoading = signal(false);
   readonly codexSettingsError = signal(false);
   readonly codexSettingsSaving = signal(false);
   readonly selectedCodexModel = signal('');
@@ -56,6 +57,11 @@ export class HeaderComponent {
     return runtime ? `${this.language.t('codexReady')} · ${runtime}` : this.language.t('codexReady');
   });
 
+  ngOnInit(): void {
+    // Warm the reusable local connection and show readiness without loading the model catalog.
+    this.loadCodexStatus();
+  }
+
   openCodexSettings(): void {
     this.codexDialogOpen.set(true);
     this.loadCodexSettings();
@@ -66,13 +72,13 @@ export class HeaderComponent {
   }
 
   loadCodexSettings(): void {
-    if (this.codexStatusLoading()) return;
-    this.codexStatusLoading.set(true);
+    if (this.codexSettingsLoading()) return;
+    this.codexSettingsLoading.set(true);
     this.codexSettingsError.set(false);
     this.codex.settings().subscribe({
       next: (settings) => {
         this.applyCodexSettings(settings);
-        this.codexStatusLoading.set(false);
+        this.codexSettingsLoading.set(false);
       },
       error: () => {
         this.codexSettings.set(null);
@@ -86,6 +92,29 @@ export class HeaderComponent {
           activeRequests: 0
         });
         this.codexSettingsError.set(true);
+        this.codexSettingsLoading.set(false);
+      }
+    });
+  }
+
+  private loadCodexStatus(): void {
+    if (this.codexStatusLoading()) return;
+    this.codexStatusLoading.set(true);
+    this.codex.status().subscribe({
+      next: (status) => {
+        this.codexStatus.set(status);
+        this.codexStatusLoading.set(false);
+      },
+      error: () => {
+        this.codexStatus.set({
+          enabled: true,
+          connected: false,
+          ready: false,
+          authenticationType: '',
+          model: '',
+          reasoningEffort: '',
+          activeRequests: 0
+        });
         this.codexStatusLoading.set(false);
       }
     });

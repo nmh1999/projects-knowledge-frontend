@@ -5,6 +5,8 @@ import {AppComponent} from './app.component';
 import {loadingInterceptor} from '@shared/interceptor/loading.interceptor';
 import {HttpLoadingService} from '@shared/service/http-loading.service';
 import {DtoKnowledgeAnswer} from '@shared/schema/response/knowledge/DtoKnowledgeAnswer';
+import {CodexService} from '@shared/service/integration/codex/codex.service';
+import {of} from 'rxjs';
 
 describe('Cancellation UI', () => {
   const project = {
@@ -48,7 +50,25 @@ describe('Cancellation UI', () => {
     spyOn(Storage.prototype, 'setItem');
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideHttpClient(withInterceptors([loadingInterceptor])), provideHttpClientTesting()]
+      providers: [
+        provideHttpClient(withInterceptors([loadingInterceptor])),
+        provideHttpClientTesting(),
+        {
+          provide: CodexService,
+          useValue: {
+            status: () =>
+              of({
+                enabled: true,
+                connected: true,
+                ready: true,
+                authenticationType: 'chatgpt',
+                model: 'gpt-test',
+                reasoningEffort: 'medium',
+                activeRequests: 0
+              })
+          }
+        }
+      ]
     }).compileComponents();
   });
 
