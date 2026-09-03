@@ -1,4 +1,4 @@
-import {Component, inject, input, signal} from '@angular/core';
+import {Component, inject, input, OnDestroy, signal} from '@angular/core';
 import {DtoKnowledgeAnswer} from '@shared/schema/response/knowledge/DtoKnowledgeAnswer';
 import {BusinessFlowComponent} from '@component/knowledge/business-flow/business-flow.component';
 import {WorkflowDiagramComponent} from '@shared/component/business/workflow-diagram/workflow-diagram.component';
@@ -9,6 +9,25 @@ import {IntegrationsComponent} from '@component/knowledge/integrations/integrati
 import {ScheduledJobsComponent} from '@component/knowledge/scheduled-jobs/scheduled-jobs.component';
 import {SourceViewerComponent} from '@component/knowledge/source-viewer/source-viewer.component';
 import {LanguageService} from '@shared/service/language.service';
+import {AnswerCopyButtonComponent} from '@component/knowledge/answer/answer-copy-button/answer-copy-button.component';
+
+type CopyTarget =
+  | 'full'
+  | 'summary'
+  | 'findings'
+  | 'roles'
+  | 'risks'
+  | 'followups'
+  | 'flow'
+  | 'workflow-diagram'
+  | 'workflow-example'
+  | 'technical-flow'
+  | 'technical-details'
+  | 'apis'
+  | 'database'
+  | 'integrations'
+  | 'scheduled-jobs'
+  | 'sources';
 
 @Component({
   selector: 'app-answer',
@@ -21,16 +40,17 @@ import {LanguageService} from '@shared/service/language.service';
     DatabaseInfoComponent,
     IntegrationsComponent,
     ScheduledJobsComponent,
-    SourceViewerComponent
+    SourceViewerComponent,
+    AnswerCopyButtonComponent
   ],
   templateUrl: './answer.component.html',
   styleUrl: './answer.component.scss'
 })
 /** Renders the structured Codex result and provides desktop clipboard actions per section. */
-export class AnswerComponent {
+export class AnswerComponent implements OnDestroy {
   readonly language = inject(LanguageService);
   readonly answer = input<DtoKnowledgeAnswer | null>(null);
-  readonly copiedTarget = signal<string | null>(null);
+  readonly copiedTarget = signal<CopyTarget | null>(null);
   readonly copyFailed = signal(false);
   private statusTimer?: number;
 
@@ -38,7 +58,7 @@ export class AnswerComponent {
     await this.copyText(this.formatAnswer(result), 'full');
   }
 
-  async copySection(target: string, items: string[]): Promise<void> {
+  async copySection(target: Exclude<CopyTarget, 'full'>, items: string[]): Promise<void> {
     const text = items.length === 1 ? items[0] : items.map((item, index) => `${index + 1}. ${item}`).join('\n');
     await this.copyText(text, target);
   }
@@ -102,7 +122,11 @@ export class AnswerComponent {
     );
   }
 
-  private async copyText(text: string, target: string): Promise<void> {
+  ngOnDestroy(): void {
+    this.clearStatusTimer();
+  }
+
+  private async copyText(text: string, target: CopyTarget): Promise<void> {
     try {
       await navigator.clipboard.writeText(text);
       this.showCopied(target);
@@ -154,7 +178,7 @@ export class AnswerComponent {
     lines.push('', `${title}:`, ...items.map((item, index) => `${index + 1}. ${item}`));
   }
 
-  private showCopied(target: string): void {
+  private showCopied(target: CopyTarget): void {
     this.clearStatusTimer();
     this.copyFailed.set(false);
     this.copiedTarget.set(target);

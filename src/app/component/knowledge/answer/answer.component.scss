@@ -368,32 +368,6 @@
 .copy-card {
   position: relative;
 }
-.section-copy {
-  position: absolute;
-  top: 12px;
-  inset-inline-end: 12px;
-  z-index: 2;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: #fff;
-  color: var(--blue);
-  padding: 5px 8px;
-  font: inherit;
-  font-size: 8px;
-  font-weight: 800;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.section-copy span {
-  display: inline-block;
-  min-width: 10px;
-  text-align: center;
-}
-.section-copy:hover {
-  background: #edf6fb;
-}
 .copy-card > app-business-flow,
 .copy-card > app-technical-flow,
 .copy-card > app-api-list,
@@ -471,10 +445,6 @@
 .technical-grid code,
 .technical-grid p {
   font-size: 10px;
-}
-.section-copy {
-  font-size: 10px;
-  padding: 6px 9px;
 }
 @media (max-width: 720px) {
   .answer-toolbar {
