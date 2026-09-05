@@ -65,7 +65,6 @@
   "codexLoadingModels": "Loading available models…",
   "codexNoTokenHint": "This check does not start a model request or use model tokens.",
   "codexModel": "Model",
-  "codexDefaultModel": "Use Codex default",
   "codexDefaultBadge": "Default",
   "codexReasoningEffort": "Reasoning effort",
   "codexEffort_none": "None",

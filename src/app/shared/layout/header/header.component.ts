@@ -38,12 +38,11 @@ export class HeaderComponent implements OnInit {
   readonly codexSettingsSaving = signal(false);
   readonly selectedCodexModel = signal('');
   readonly selectedCodexEffort = signal('medium');
-  readonly defaultCodexModel = computed(() => this.codexSettings()?.models.find((model) => model.defaultModel) ?? null);
+  private readonly automaticCodexModel = signal(true);
   readonly selectedCodexModelDetails = computed<DtoCodexModel | null>(() => {
     const settings = this.codexSettings();
     if (!settings) return null;
-    const selected = this.selectedCodexModel();
-    return settings.models.find((model) => (selected ? model.id === selected : model.defaultModel)) ?? null;
+    return settings.models.find((model) => model.id === this.selectedCodexModel()) ?? null;
   });
   readonly codexEffortOptions = computed(() => this.selectedCodexModelDetails()?.reasoningEfforts ?? []);
   readonly codexStatusText = computed(() => {
@@ -122,6 +121,7 @@ export class HeaderComponent implements OnInit {
 
   selectCodexModel(model: string): void {
     this.selectedCodexModel.set(model);
+    this.automaticCodexModel.set(model === this.codexSettings()?.models[0]?.id);
     const details = this.selectedCodexModelDetails();
     if (!details) return;
     const efforts = details.reasoningEfforts.map((option) => option.value);
@@ -139,7 +139,10 @@ export class HeaderComponent implements OnInit {
     this.codexSettingsSaving.set(true);
     this.codexSettingsError.set(false);
     this.codex
-      .updateSettings({model: this.selectedCodexModel(), reasoningEffort: this.selectedCodexEffort()})
+      .updateSettings({
+        model: this.automaticCodexModel() ? '' : this.selectedCodexModel(),
+        reasoningEffort: this.selectedCodexEffort()
+      })
       .subscribe({
         next: (settings) => {
           this.applyCodexSettings(settings);
@@ -221,7 +224,8 @@ export class HeaderComponent implements OnInit {
   private applyCodexSettings(settings: DtoCodexSettings): void {
     this.codexSettings.set(settings);
     this.codexStatus.set(settings.status);
-    this.selectedCodexModel.set(settings.selectedModel);
+    this.automaticCodexModel.set(!settings.selectedModel);
+    this.selectedCodexModel.set(settings.selectedModel || settings.models[0]?.id || '');
     this.selectedCodexEffort.set(settings.status.reasoningEffort);
   }
 }

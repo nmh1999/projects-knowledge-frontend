@@ -61,7 +61,7 @@ describe('HeaderComponent desktop shutdown', () => {
     expect(fixture.nativeElement.querySelector('.shutdown-button')).not.toBeNull();
   });
 
-  it('loads Codex settings on demand without starting a model request', () => {
+  it('loads Codex settings on demand without starting a model request', async () => {
     const fixture = TestBed.createComponent(HeaderComponent);
     fixture.detectChanges();
     flushInitialCodexStatus();
@@ -71,10 +71,13 @@ describe('HeaderComponent desktop shutdown', () => {
     expect(request.request.method).toBe('GET');
     request.flush(settingsResponse());
     fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.codex-dialog')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.codex-status').classList).toContain('ready');
     expect(fixture.nativeElement.querySelector('.codex-status small').textContent).toContain('gpt-test');
+    expect(fixture.nativeElement.querySelector('#codex-model').value).toBe('gpt-test');
   });
 
   it('saves a supported effort for new Codex requests', () => {

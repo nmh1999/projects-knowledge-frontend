@@ -65,7 +65,6 @@
   "codexLoadingModels": "جارٍ تحميل الموديلات المتاحة…",
   "codexNoTokenHint": "هذا الفحص لا يشغّل طلب موديل ولا يستهلك توكنز.",
   "codexModel": "الموديل",
-  "codexDefaultModel": "استخدام إعداد Codex الافتراضي",
   "codexDefaultBadge": "الافتراضي",
   "codexReasoningEffort": "مستوى التفكير",
   "codexEffort_none": "بدون",

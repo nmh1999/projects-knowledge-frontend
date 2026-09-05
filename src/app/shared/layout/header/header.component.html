@@ -99,7 +99,6 @@
         <div class="codex-settings-fields">
           <label for="codex-model">{{ language.t('codexModel') }}</label>
           <select id="codex-model" [ngModel]="selectedCodexModel()" (ngModelChange)="selectCodexModel($event)">
-            <option value="">{{ language.t('codexDefaultModel') }} — {{ defaultCodexModel()?.displayName }}</option>
             @for (model of codexSettings()?.models; track model.id) {
               <option [value]="model.id">
                 {{ model.displayName }}{{ model.defaultModel ? ' · ' + language.t('codexDefaultBadge') : '' }}
